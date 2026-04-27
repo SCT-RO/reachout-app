@@ -2,21 +2,98 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../hooks/useCart';
+import { useApp } from '../context/AppContext';
 import { HiArrowLeft, HiShoppingCart, HiTrash, HiTag } from '../components/Icons';
 
 const PROMO_CODES = { REACH20: 0.2 };
 
+const IconPhone = () => (
+  <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+  </svg>
+);
+const IconCard = () => (
+  <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+  </svg>
+);
+
+function PaymentOptionsSheet({ cartItems, inAppTotal, ccavenueTotal, onClose, onSelectInApp, onSelectCCAvenue }) {
+  const savings = inAppTotal - ccavenueTotal;
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 300, display: 'flex', alignItems: 'flex-end' }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+        onClick={e => e.stopPropagation()}
+        style={{ background: 'var(--bg-surface)', width: '100%', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '24px 20px 40px' }}
+      >
+        <div style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 20px' }} />
+        <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Choose how to pay</div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>
+          {cartItems.length} course{cartItems.length !== 1 ? 's' : ''} in your cart
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* In-App */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onSelectInApp}
+            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(79,70,229,0.08)', border: '1.5px solid var(--primary)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+          >
+            <div style={{ color: 'var(--primary)', flexShrink: 0 }}><IconPhone /></div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>In-App Purchase</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>via Google Play / App Store</div>
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>₹{inAppTotal.toLocaleString()}</div>
+          </motion.button>
+
+          {/* CC Avenue */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onSelectCCAvenue}
+            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(245,158,11,0.08)', border: '1.5px solid var(--warning)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+          >
+            <div style={{ color: 'var(--warning)', flexShrink: 0 }}><IconCard /></div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>CC Avenue</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>via Credit / Debit Card, UPI, NetBanking</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--warning)' }}>₹{ccavenueTotal.toLocaleString()}</div>
+              {savings > 0 && (
+                <div style={{ fontSize: 10, color: 'var(--success)', fontWeight: 700 }}>Save ₹{savings.toLocaleString()}</div>
+              )}
+            </div>
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function CartScreen() {
   const navigate = useNavigate();
   const { cartItems, removeFromCart } = useCart();
+  const { showToast } = useApp();
   const [promoInput, setPromoInput] = useState('');
   const [appliedCode, setAppliedCode] = useState('');
   const [promoStatus, setPromoStatus] = useState(null); // null | 'valid' | 'invalid'
+  const [showPaymentSheet, setShowPaymentSheet] = useState(false);
 
   const discount = PROMO_CODES[appliedCode] || 0;
   const subtotal = cartItems.reduce((a, i) => a + i.price, 0);
   const discountAmt = Math.round(subtotal * discount);
   const total = subtotal - discountAmt;
+
+  const ccavenueSubtotal = cartItems.reduce((a, i) => a + (i.ccavenuePrice ?? i.price), 0);
+  const ccavenueDiscountAmt = Math.round(ccavenueSubtotal * discount);
+  const ccavenueTotal = ccavenueSubtotal - ccavenueDiscountAmt;
 
   const handleApply = () => {
     const code = promoInput.toUpperCase().trim();
@@ -29,10 +106,18 @@ export default function CartScreen() {
     }
   };
 
-  const handleProceed = () => {
+  const handleProceed = () => setShowPaymentSheet(true);
+
+  const handleSelectInApp = () => {
+    setShowPaymentSheet(false);
     const summary = { discount, discountAmt, subtotal, total };
     sessionStorage.setItem('ro_order_summary', JSON.stringify(summary));
     navigate('/payment');
+  };
+
+  const handleSelectCCAvenue = () => {
+    setShowPaymentSheet(false);
+    showToast('Redirecting to CC Avenue…');
   };
 
   return (
@@ -151,6 +236,19 @@ export default function CartScreen() {
           <button className="btn-primary" onClick={handleProceed}>Proceed to Payment</button>
         </div>
       )}
+
+      <AnimatePresence>
+        {showPaymentSheet && (
+          <PaymentOptionsSheet
+            cartItems={cartItems}
+            inAppTotal={total}
+            ccavenueTotal={ccavenueTotal}
+            onClose={() => setShowPaymentSheet(false)}
+            onSelectInApp={handleSelectInApp}
+            onSelectCCAvenue={handleSelectCCAvenue}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

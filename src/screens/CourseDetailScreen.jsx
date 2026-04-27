@@ -4,8 +4,80 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { useApp } from '../context/AppContext';
-import { courses } from '../data/courses';
+import { useCourses } from '../hooks/useCourses';
 import { HiArrowLeft, HiStar, HiPlay, HiCheck, HiShoppingCart } from '../components/Icons';
+
+const IconPhone = () => (
+  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+  </svg>
+);
+
+const IconCard = () => (
+  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+  </svg>
+);
+
+function PurchaseOptionsSheet({ course, onClose, onSelectInApp, onSelectCCAvenue }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 300, display: 'flex', alignItems: 'flex-end' }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+        onClick={e => e.stopPropagation()}
+        style={{ background: 'var(--bg-surface)', width: '100%', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '24px 20px 36px' }}
+      >
+        <div style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 20px' }} />
+        <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Choose how to pay</div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>{course.title}</div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* In-App */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onSelectInApp}
+            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(79,70,229,0.08)', border: '1.5px solid var(--primary)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+          >
+            <div style={{ color: 'var(--primary)', flexShrink: 0 }}><IconPhone /></div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>In-App Purchase</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>via Google Play / App Store</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--primary)' }}>₹{course.price.toLocaleString()}</div>
+            </div>
+          </motion.button>
+
+          {/* CC Avenue */}
+          {course.ccavenuePrice && (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={onSelectCCAvenue}
+              style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(245,158,11,0.08)', border: '1.5px solid var(--warning)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+            >
+              <div style={{ color: 'var(--warning)', flexShrink: 0 }}><IconCard /></div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>CC Avenue</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>via Credit / Debit Card, UPI, NetBanking</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--warning)' }}>₹{course.ccavenuePrice.toLocaleString()}</div>
+                {course.ccavenuePrice < course.price && (
+                  <div style={{ fontSize: 10, color: 'var(--success)', fontWeight: 700 }}>Save ₹{(course.price - course.ccavenuePrice).toLocaleString()}</div>
+                )}
+              </div>
+            </motion.button>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 export default function CourseDetailScreen() {
   const { id } = useParams();
@@ -13,9 +85,11 @@ export default function CourseDetailScreen() {
   const { addToCart, isInCart, purchase } = useCart();
   const { currentUser } = useAuth();
   const { showToast } = useApp();
+  const { courses } = useCourses();
 
-  const course = courses.find(c => c.id === Number(id));
+  const course = courses.find(c => String(c.id) === id || String(c.notionId) === id);
   const [flyAnim, setFlyAnim] = useState(false);
+  const [showPurchaseSheet, setShowPurchaseSheet] = useState(false);
   const alreadyInCart = course ? isInCart(course.id) : false;
 
   if (!course) {
@@ -36,11 +110,19 @@ export default function CourseDetailScreen() {
     setTimeout(() => setFlyAnim(false), 1100);
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = () => setShowPurchaseSheet(true);
+
+  const handleSelectInApp = () => {
+    setShowPurchaseSheet(false);
     if (!alreadyInCart) addToCart(course);
     const summary = { subtotal: course.price, discount: 0, discountAmt: 0, total: course.price };
     sessionStorage.setItem('ro_order_summary', JSON.stringify(summary));
     navigate('/payment');
+  };
+
+  const handleSelectCCAvenue = () => {
+    setShowPurchaseSheet(false);
+    showToast('Redirecting to CC Avenue…');
   };
 
   const handleEnrollFree = () => {
@@ -131,6 +213,18 @@ export default function CourseDetailScreen() {
           ))}
         </div>
       </div>
+
+      {/* Purchase options sheet */}
+      <AnimatePresence>
+        {showPurchaseSheet && (
+          <PurchaseOptionsSheet
+            course={course}
+            onClose={() => setShowPurchaseSheet(false)}
+            onSelectInApp={handleSelectInApp}
+            onSelectCCAvenue={handleSelectCCAvenue}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Fly-to-cart animation */}
       <AnimatePresence>

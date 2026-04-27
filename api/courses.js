@@ -39,6 +39,7 @@ export default async function handler(req, res) {
       image: prop(page, 'Image', 'url') || `https://picsum.photos/seed/${index + 1}/400/200`,
       price: prop(page, 'Price', 'number') ?? 0,
       originalPrice: prop(page, 'OriginalPrice', 'number') || null,
+      ccavenuePrice: prop(page, 'CCAvenuePrice', 'number') || null,
       rating: prop(page, 'Rating', 'number') ?? 4.5,
       enrolled: prop(page, 'Enrolled', 'number') ?? 0,
       duration: prop(page, 'Duration', 'rich_text') || '—',

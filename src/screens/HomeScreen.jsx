@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
-import { courses } from '../data/courses';
+import { useCourses } from '../hooks/useCourses';
 import CourseCard from '../components/CourseCard';
 import BottomNav from '../components/BottomNav';
 import Chatbot from '../components/Chatbot';
@@ -22,14 +22,9 @@ export default function HomeScreen() {
   const { currentUser } = useAuth();
   const { cartItems } = useCart();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+  const { courses, isLoading, error, refetch } = useCourses();
   const [activeCat, setActiveCat] = useState('All');
   const [searchQ, setSearchQ] = useState('');
-
-  useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 700);
-    return () => clearTimeout(t);
-  }, []);
 
   const firstName = currentUser?.name?.split(' ')[0] || 'there';
   const featured = courses.find(c => c.featured);
@@ -142,6 +137,24 @@ export default function HomeScreen() {
                 </div>
               </div>
             </div>
+          </motion.div>
+        )}
+
+        {/* Error banner */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}
+          >
+            <span style={{ fontSize: 12, color: 'var(--error)', fontWeight: 500, flex: 1 }}>
+              Couldn't load latest courses. Showing cached data.
+            </span>
+            <button
+              onClick={refetch}
+              style={{ fontSize: 12, fontWeight: 700, color: 'var(--error)', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter,sans-serif', textDecoration: 'underline' }}
+            >
+              Retry
+            </button>
           </motion.div>
         )}
 

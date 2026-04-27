@@ -24,7 +24,9 @@ export function AppProvider({ children }) {
   // ─── Dark mode ─────────────────────────────────────────────────────────────
   const [isDark, setIsDark] = useState(() => {
     const s = getSession();
-    return s ? (getUserPrefs(s.userId).darkMode ?? true) : true;
+    if (s) return getUserPrefs(s.userId).darkMode ?? true;
+    const global = localStorage.getItem('ro_dark_mode');
+    return global !== null ? global === 'true' : true;
   });
 
   // ─── Toast ─────────────────────────────────────────────────────────────────
@@ -34,7 +36,9 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (currentUser) {
       setCartItems(getCart(currentUser.userId));
-      setIsDark(getUserPrefs(currentUser.userId).darkMode ?? true);
+      const mode = getUserPrefs(currentUser.userId).darkMode ?? true;
+      setIsDark(mode);
+      localStorage.setItem('ro_dark_mode', String(mode));
     } else {
       setCartItems([]);
     }
@@ -98,6 +102,7 @@ export function AppProvider({ children }) {
   const toggleDark = useCallback(() => {
     setIsDark(prev => {
       const next = !prev;
+      localStorage.setItem('ro_dark_mode', String(next));
       if (currentUser) saveUserPrefs(currentUser.userId, { darkMode: next });
       return next;
     });
