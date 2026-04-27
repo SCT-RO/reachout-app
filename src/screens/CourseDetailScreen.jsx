@@ -115,14 +115,17 @@ export default function CourseDetailScreen() {
   const handleSelectInApp = () => {
     setShowPurchaseSheet(false);
     if (!alreadyInCart) addToCart(course);
-    const summary = { subtotal: course.price, discount: 0, discountAmt: 0, total: course.price };
+    const summary = { subtotal: course.price, discount: 0, discountAmt: 0, total: course.price, channel: 'inapp' };
     sessionStorage.setItem('ro_order_summary', JSON.stringify(summary));
     navigate('/payment');
   };
 
   const handleSelectCCAvenue = () => {
     setShowPurchaseSheet(false);
-    showToast('Redirecting to CC Avenue…');
+    const price = course.ccavenuePrice ?? course.price;
+    const summary = { subtotal: price, discount: 0, discountAmt: 0, total: price, channel: 'ccavenue' };
+    sessionStorage.setItem('ro_order_summary', JSON.stringify(summary));
+    navigate('/payment');
   };
 
   const handleEnrollFree = () => {

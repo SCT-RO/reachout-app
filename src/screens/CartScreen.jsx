@@ -110,14 +110,16 @@ export default function CartScreen() {
 
   const handleSelectInApp = () => {
     setShowPaymentSheet(false);
-    const summary = { discount, discountAmt, subtotal, total };
+    const summary = { discount, discountAmt, subtotal, total, channel: 'inapp' };
     sessionStorage.setItem('ro_order_summary', JSON.stringify(summary));
     navigate('/payment');
   };
 
   const handleSelectCCAvenue = () => {
     setShowPaymentSheet(false);
-    showToast('Redirecting to CC Avenue…');
+    const summary = { discount, discountAmt: ccavenueDiscountAmt, subtotal: ccavenueSubtotal, total: ccavenueTotal, channel: 'ccavenue' };
+    sessionStorage.setItem('ro_order_summary', JSON.stringify(summary));
+    navigate('/payment');
   };
 
   return (
