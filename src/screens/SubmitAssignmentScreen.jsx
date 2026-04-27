@@ -67,7 +67,7 @@ function FloatTextarea({ id, label, value, onChange, maxLength, error }) {
           {value.length}/{maxLength}
         </div>
       )}
-      {error && <div style={{ fontSize: 12, color: 'var(--error)', marginTop: 5, paddingLeft: 4 }}>{error}</div>}
+      {error && <div style={{ fontSize: 12, color: 'var(--error-text)', marginTop: 5, paddingLeft: 4 }}>{error}</div>}
     </div>
   );
 }
@@ -174,7 +174,7 @@ export default function SubmitAssignmentScreen() {
               </motion.div>
             )}
           </AnimatePresence>
-          {errors.course && <div style={{ fontSize: 12, color: 'var(--error)', marginTop: 5, paddingLeft: 4 }}>{errors.course}</div>}
+          {errors.course && <div style={{ fontSize: 12, color: 'var(--error-text)', marginTop: 5, paddingLeft: 4 }}>{errors.course}</div>}
         </div>
 
         {/* Title */}
@@ -193,7 +193,7 @@ export default function SubmitAssignmentScreen() {
             </div>
             <div style={{ position: 'absolute', right: 14, bottom: 10, fontSize: 11, color: 'var(--text-muted)' }}>{title.length}/100</div>
           </div>
-          {errors.title && <div style={{ fontSize: 12, color: 'var(--error)', marginTop: 5, paddingLeft: 4 }}>{errors.title}</div>}
+          {errors.title && <div style={{ fontSize: 12, color: 'var(--error-text)', marginTop: 5, paddingLeft: 4 }}>{errors.title}</div>}
         </div>
 
         {/* Description */}
@@ -240,7 +240,7 @@ export default function SubmitAssignmentScreen() {
               <button onClick={() => setFile(null)} style={{ color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}><HiXMark /></button>
             </motion.div>
           )}
-          {errors.file && <div style={{ fontSize: 12, color: 'var(--error)', marginTop: 6, paddingLeft: 4 }}>{errors.file}</div>}
+          {errors.file && <div style={{ fontSize: 12, color: 'var(--error-text)', marginTop: 6, paddingLeft: 4 }}>{errors.file}</div>}
         </div>
       </div>
 

@@ -27,13 +27,16 @@ function PaymentOptionsSheet({ cartItems, inAppTotal, ccavenueTotal, onClose, on
       onClick={onClose}
     >
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="payment-sheet-title"
         initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 220 }}
         onClick={e => e.stopPropagation()}
         style={{ background: 'var(--bg-surface)', width: '100%', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '24px 20px 40px' }}
       >
-        <div style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 20px' }} />
-        <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Choose how to pay</div>
+        <div aria-hidden="true" style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 20px' }} />
+        <div id="payment-sheet-title" style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Choose how to pay</div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>
           {cartItems.length} course{cartItems.length !== 1 ? 's' : ''} in your cart
         </div>
@@ -43,21 +46,21 @@ function PaymentOptionsSheet({ cartItems, inAppTotal, ccavenueTotal, onClose, on
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={onSelectInApp}
-            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(79,70,229,0.08)', border: '1.5px solid var(--primary)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(79,70,229,0.08)', border: '1.5px solid var(--primary)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%', color: 'var(--text-primary)' }}
           >
-            <div style={{ color: 'var(--primary)', flexShrink: 0 }}><IconPhone /></div>
+            <div style={{ color: 'var(--primary-text)', flexShrink: 0 }}><IconPhone /></div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>In-App Purchase</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>via Google Play / App Store</div>
             </div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>₹{inAppTotal.toLocaleString()}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary-text)' }}>₹{inAppTotal.toLocaleString()}</div>
           </motion.button>
 
           {/* CC Avenue */}
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={onSelectCCAvenue}
-            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(245,158,11,0.08)', border: '1.5px solid var(--warning)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(245,158,11,0.08)', border: '1.5px solid var(--warning)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%', color: 'var(--text-primary)' }}
           >
             <div style={{ color: 'var(--warning)', flexShrink: 0 }}><IconCard /></div>
             <div style={{ flex: 1 }}>
@@ -129,7 +132,7 @@ export default function CartScreen() {
     >
       {/* Header */}
       <div style={{ padding: '24px 20px 14px', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-        <button onClick={() => navigate(-1)} style={{ color: 'var(--text-primary)', cursor: 'pointer' }}><HiArrowLeft /></button>
+        <button onClick={() => navigate(-1)} aria-label="Go back" style={{ color: 'var(--text-primary)', cursor: 'pointer' }}><HiArrowLeft /></button>
         <div style={{ flex: 1 }}>
           <h1 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.01em' }}>My Cart</h1>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>{cartItems.length} item{cartItems.length !== 1 ? 's' : ''}</div>
@@ -166,9 +169,9 @@ export default function CartScreen() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.4, marginBottom: 4 }}>{item.title}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{item.instructor}</div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>₹{item.price.toLocaleString()}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary-text)' }}>₹{item.price.toLocaleString()}</div>
                     </div>
-                    <button onClick={() => removeFromCart(item.id)} style={{ color: 'var(--error)', alignSelf: 'flex-start', padding: 4, cursor: 'pointer' }}>
+                    <button onClick={() => removeFromCart(item.id)} aria-label={`Remove ${item.title} from cart`} style={{ color: 'var(--error-text)', alignSelf: 'flex-start', padding: 4, cursor: 'pointer' }}>
                       <HiTrash />
                     </button>
                   </motion.div>
@@ -182,11 +185,14 @@ export default function CartScreen() {
                 <HiTag /> Promo Code
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
+                <label htmlFor="promo-code" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>Promo code</label>
                 <input
+                  id="promo-code"
                   value={promoInput}
                   onChange={e => { setPromoInput(e.target.value); setPromoStatus(null); }}
                   onKeyDown={e => e.key === 'Enter' && handleApply()}
                   placeholder="Enter promo code"
+                  aria-describedby="promo-status"
                   style={{ flex: 1, background: 'var(--bg-surface)', border: `1.5px solid ${promoStatus === 'valid' ? 'var(--success)' : promoStatus === 'invalid' ? 'var(--error)' : 'var(--border)'}`, borderRadius: 12, padding: '11px 14px', color: 'var(--text-primary)', fontSize: 14, outline: 'none', fontFamily: 'Inter,sans-serif', textTransform: 'uppercase' }}
                 />
                 <button
@@ -196,18 +202,20 @@ export default function CartScreen() {
                   Apply
                 </button>
               </div>
-              <AnimatePresence>
-                {promoStatus === 'valid' && (
-                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ fontSize: 12, color: 'var(--success)', marginTop: 6, fontWeight: 600 }}>
-                    ✓ 20% discount applied!
-                  </motion.div>
-                )}
-                {promoStatus === 'invalid' && (
-                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ fontSize: 12, color: 'var(--error)', marginTop: 6, fontWeight: 600 }}>
-                    ✗ Invalid promo code
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div id="promo-status" aria-live="polite" aria-atomic="true">
+                <AnimatePresence>
+                  {promoStatus === 'valid' && (
+                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ fontSize: 12, color: 'var(--success)', marginTop: 6, fontWeight: 600 }}>
+                      ✓ 20% discount applied!
+                    </motion.div>
+                  )}
+                  {promoStatus === 'invalid' && (
+                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ fontSize: 12, color: 'var(--error-text)', marginTop: 6, fontWeight: 600 }}>
+                      ✗ Invalid promo code
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             {/* Order summary */}

@@ -53,14 +53,15 @@ export default function MyLearningScreen() {
             const pct = c.percentComplete || 0;
             const isDone = pct >= 100;
             return (
-              <motion.div
+              <motion.button
                 key={c.id}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.06 }}
                 whileHover={{ scale: 1.01 }}
                 onClick={() => navigate(`/lesson/${c.id}`)}
-                style={{ display: 'flex', gap: 14, marginBottom: 14, padding: 12, background: 'var(--bg-surface)', borderRadius: 16, cursor: 'pointer', border: '1px solid var(--border)' }}
+                aria-label={`${c.title} — ${pct}% complete${isDone ? ', completed' : ', continue learning'}`}
+                style={{ display: 'flex', gap: 14, marginBottom: 14, padding: 12, background: 'var(--bg-surface)', borderRadius: 16, cursor: 'pointer', border: '1px solid var(--border)', width: '100%', textAlign: 'left', fontFamily: 'Inter,sans-serif', color: 'var(--text-primary)' }}
               >
                 <img src={c.image} alt={c.title} style={{ width: 76, height: 76, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} crossOrigin="anonymous" />
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
@@ -75,7 +76,7 @@ export default function MyLearningScreen() {
                       <span>{pct}% complete</span>
                       {isDone
                         ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>✓ Done</span>
-                        : <span style={{ color: 'var(--accent)', fontWeight: 600 }}>Continue →</span>
+                        : <span style={{ color: 'var(--accent-text)', fontWeight: 600 }}>Continue →</span>
                       }
                     </div>
                     <div style={{ height: 5, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
@@ -88,7 +89,7 @@ export default function MyLearningScreen() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </motion.button>
             );
           })
         )}

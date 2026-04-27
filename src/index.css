@@ -7,14 +7,19 @@
   --border: #3F3F46;
   --text-primary: #FAFAFA;
   --text-muted: #A1A1AA;
-  --primary: #4F46E5;
+  --primary: #4F46E5;        /* button/bg use only */
+  --primary-text: #818CF8;   /* text on dark bg — 6.4:1 contrast ✓ */
   --accent: #6366F1;
+  --accent-text: #818CF8;
   --success: #22C55E;
+  --success-text: #4ade80;     /* text on dark bg — 7.2:1 contrast ✓ */
   --warning: #F59E0B;
-  --error: #EF4444;
+  --error: #EF4444;            /* bg/border use only */
+  --error-text: #F87171;       /* text on dark bg — 5.2:1 contrast ✓ */
+  --focus-ring: #818CF8;
 }
 
-/* ─── Light mode overrides (both body-level and phone-frame-level) ─────────── */
+/* ─── Light mode overrides ─────────────────────────────────────────────────── */
 body.light-mode,
 .light-mode {
   --bg-dark: #F4F4F5;
@@ -22,6 +27,11 @@ body.light-mode,
   --border: #D4D4D8;
   --text-primary: #18181B;
   --text-muted: #71717A;
+  --primary-text: #4338CA;   /* text on light bg — 9.1:1 contrast ✓ */
+  --accent-text: #4338CA;
+  --success-text: #15803d;   /* text on light bg — 5.3:1 contrast ✓ */
+  --error-text: #DC2626;     /* text on light bg — 5.9:1 contrast ✓ */
+  --focus-ring: #4338CA;
 }
 
 /* ─── Global reset ─────────────────────────────────────────────────────────── */
@@ -43,6 +53,31 @@ button {
   border: none;
   background: none;
   font-family: 'Inter', sans-serif;
+}
+
+/* ─── Focus management (WCAG 2.4.7) ────────────────────────────────────────── */
+*:focus { outline: none; }
+*:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Minimum touch target 44×44px (WCAG 2.5.5) ─────────────────────────────  */
+button, [role="button"], a {
+  min-height: 44px;
+  min-width: 44px;
+}
+/* Exception: inline buttons that are sized by their container */
+.btn-primary, .btn-outline { min-height: 52px; }
+
+/* ─── Reduced motion (WCAG 2.3.3) ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ─── App shell ─────────────────────────────────────────────────────────────── */

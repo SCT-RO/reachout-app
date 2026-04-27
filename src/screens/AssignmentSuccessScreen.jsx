@@ -76,7 +76,7 @@ export default function AssignmentSuccessScreen() {
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
           style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, marginBottom: 28, textAlign: 'left' }}
         >
-          <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Submission Details</div>
+          <div style={{ fontSize: 11, color: 'var(--accent-text)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Submission Details</div>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{assignment.courseName}</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>{assignment.title}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

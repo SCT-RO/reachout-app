@@ -24,7 +24,7 @@ function FloatInput({ id, type = 'text', label, icon, value, onChange, error }) 
         <div className="input-icon">{icon}</div>
         <label className="input-label" htmlFor={id}>{label}</label>
       </div>
-      {error && <div style={{ fontSize: 12, color: 'var(--error)', marginTop: 5, fontWeight: 500, paddingLeft: 4 }}>{error}</div>}
+      {error && <div style={{ fontSize: 12, color: 'var(--error-text)', marginTop: 5, fontWeight: 500, paddingLeft: 4 }}>{error}</div>}
     </div>
   );
 }
@@ -41,12 +41,15 @@ function ForgotPasswordModal({ onClose }) {
       onClick={onClose}
     >
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="forgot-pw-title"
         initial={{ y: 200 }} animate={{ y: 0 }} exit={{ y: 200 }}
         transition={{ type: 'spring', damping: 24, stiffness: 200 }}
         onClick={e => e.stopPropagation()}
         style={{ background: 'var(--bg-surface)', width: '100%', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '28px 24px 40px' }}
       >
-        <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Forgot Password?</div>
+        <div id="forgot-pw-title" style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Forgot Password?</div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.5 }}>
           Enter your registered email and we'll send a reset link (demo mode — no real email sent).
         </div>
@@ -120,25 +123,29 @@ export default function AuthScreen() {
       </h1>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', marginBottom: 32, position: 'relative' }}>
+      <div role="tablist" aria-label="Authentication options" style={{ display: 'flex', marginBottom: 32, position: 'relative' }}>
         {['signIn', 'signUp'].map(t => (
-          <div
+          <button
             key={t}
-            style={{ flex: 1, textAlign: 'center', paddingBottom: 12, position: 'relative', cursor: 'pointer', color: tab === t ? 'var(--text-primary)' : 'var(--text-muted)', fontWeight: 600, transition: 'color 0.2s', fontSize: 15 }}
+            role="tab"
+            aria-selected={tab === t}
+            id={`tab-${t}`}
+            aria-controls={`tabpanel-${t}`}
+            style={{ flex: 1, textAlign: 'center', paddingBottom: 12, position: 'relative', cursor: 'pointer', color: tab === t ? 'var(--text-primary)' : 'var(--text-muted)', fontWeight: 600, transition: 'color 0.2s', fontSize: 15, background: 'none', border: 'none', fontFamily: 'Inter,sans-serif', minHeight: 44 }}
             onClick={() => switchTab(t)}
           >
             {t === 'signIn' ? 'Sign In' : 'Sign Up'}
             {tab === t && <motion.div layoutId="auth-tab" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: 'var(--primary)', borderRadius: 2 }} />}
-          </div>
+          </button>
         ))}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: 'var(--border)', zIndex: -1 }} />
+        <div aria-hidden="true" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: 'var(--border)', zIndex: -1 }} />
       </div>
 
       {/* Form error banner */}
       <AnimatePresence>
         {errors.form && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: '10px 14px', fontSize: 13, color: 'var(--error)', fontWeight: 500, marginBottom: 16 }}>
+          <motion.div role="alert" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: '10px 14px', fontSize: 13, color: 'var(--error-text)', fontWeight: 500, marginBottom: 16 }}>
             {errors.form}
           </motion.div>
         )}
@@ -157,9 +164,12 @@ export default function AuthScreen() {
       </div>
 
       {tab === 'signIn' && (
-        <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, textAlign: 'right', marginBottom: 28, cursor: 'pointer' }} onClick={() => setShowForgot(true)}>
+        <button
+          style={{ fontSize: 13, color: 'var(--primary-text)', fontWeight: 600, textAlign: 'right', marginBottom: 28, cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'Inter,sans-serif', alignSelf: 'flex-end', display: 'block', width: '100%', minHeight: 44 }}
+          onClick={() => setShowForgot(true)}
+        >
           Forgot Password?
-        </div>
+        </button>
       )}
 
       <button className="btn-primary" style={{ marginBottom: 24, opacity: loading ? 0.7 : 1 }} onClick={handleSubmit} disabled={loading}>

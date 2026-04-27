@@ -372,6 +372,7 @@ export default function Chatbot() {
         <motion.button
           whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
           onClick={handleOpen}
+          aria-label="Chat with ARIA, your learning mentor"
           style={{ position: 'absolute', bottom: 82, right: 20, width: 54, height: 54, borderRadius: '50%', background: 'linear-gradient(135deg,var(--primary),var(--accent))', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 28px rgba(79,70,229,0.5)', zIndex: 100, border: 'none', cursor: 'pointer' }}
         >
           <IcSparkles s={22} />
@@ -398,7 +399,7 @@ export default function Chatbot() {
             {/* ── Header ── */}
             <div style={{ background: 'linear-gradient(135deg, #3730a3 0%, #6d28d9 60%, #a21caf 100%)', padding: '18px 16px 16px', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button onClick={handleClose} style={{ color: 'rgba(255,255,255,0.85)', cursor: 'pointer', flexShrink: 0, padding: 4 }}>
+                <button onClick={handleClose} aria-label="Close chat" style={{ color: 'rgba(255,255,255,0.85)', cursor: 'pointer', flexShrink: 0, padding: 4 }}>
                   <IcArrow />
                 </button>
 
@@ -423,8 +424,9 @@ export default function Chatbot() {
                 {/* TTS toggle */}
                 <button
                   onClick={() => { setVoiceOn(v => !v); window.speechSynthesis?.cancel(); }}
+                  aria-label={voiceOn ? 'Mute ARIA voice' : 'Unmute ARIA voice'}
+                  aria-pressed={voiceOn}
                   style={{ width: 34, height: 34, borderRadius: '50%', background: voiceOn ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.12)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.25)', cursor: 'pointer', flexShrink: 0 }}
-                  title={voiceOn ? 'Mute ARIA' : 'Let ARIA speak'}
                 >
                   <IcSound on={voiceOn} />
                 </button>
@@ -433,6 +435,9 @@ export default function Chatbot() {
 
             {/* ── Messages ── */}
             <div
+              role="log"
+              aria-live="polite"
+              aria-label="Chat messages"
               className="hide-scrollbar"
               style={{ flex: 1, overflowY: 'auto', padding: '16px 14px 8px', display: 'flex', flexDirection: 'column', gap: 12 }}
             >
@@ -477,7 +482,7 @@ export default function Chatbot() {
 
               {/* Typing indicator */}
               {isTyping && (
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+                <div role="status" aria-label="ARIA is typing" style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#3730a3,#6d28d9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <IcSparkles s={14} />
                   </div>
@@ -501,6 +506,9 @@ export default function Chatbot() {
             <AnimatePresence>
               {recording && (
                 <motion.div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Voice recording in progress"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   style={{ position: 'absolute', inset: 0, background: 'rgba(55,48,163,0.92)', backdropFilter: 'blur(12px)', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}
                 >
@@ -531,18 +539,23 @@ export default function Chatbot() {
             {/* ── Input bar ── */}
             <div style={{ padding: '10px 12px 16px', borderTop: '1px solid var(--border)', background: 'var(--bg-surface)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-dark)', borderRadius: 28, border: '1.5px solid var(--border)', padding: '6px 6px 6px 16px' }}>
+                <label htmlFor="aria-input" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>Message ARIA</label>
                 <input
+                  id="aria-input"
                   ref={inputRef}
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
                   placeholder="Ask ARIA anything…"
+                  aria-label="Message ARIA"
                   style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'Inter,sans-serif' }}
                 />
                 {/* Mic */}
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={recording ? stopRecording : startRecording}
+                  aria-label={recording ? 'Stop voice recording' : 'Start voice input'}
+                  aria-pressed={recording}
                   style={{ width: 36, height: 36, borderRadius: '50%', background: recording ? 'var(--error)' : 'transparent', color: recording ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', flexShrink: 0 }}
                 >
                   <IcMic />
@@ -551,6 +564,7 @@ export default function Chatbot() {
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => handleSend()}
+                  aria-label="Send message"
                   style={{ width: 36, height: 36, borderRadius: '50%', background: input.trim() ? 'var(--primary)' : 'var(--border)', color: input.trim() ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', flexShrink: 0, transition: 'background 0.2s' }}
                 >
                   <IcSend />

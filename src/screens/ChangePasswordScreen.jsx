@@ -57,7 +57,7 @@ function PwdInput({ id, label, value, onChange, onBlur, error }) {
             key={error}
             initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="shake"
-            style={{ fontSize: 12, color: 'var(--error)', marginTop: 5, paddingLeft: 4, fontWeight: 500 }}
+            style={{ fontSize: 12, color: 'var(--error-text)', marginTop: 5, paddingLeft: 4, fontWeight: 500 }}
           >
             {error}
           </motion.div>

@@ -114,11 +114,7 @@ export default function ProfileScreen() {
   const comingSoon = () => showToast('Coming soon 🚀', 'success');
 
   return (
-    <motion.div
-      initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}
-      transition={{ duration: 0.22 }}
-      style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-dark)', position: 'relative' }}
-    >
+    <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-dark)', position: 'relative' }}>
       <div style={{ padding: '20px 20px 10px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
         <h1 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.01em' }}>Profile</h1>
       </div>
@@ -145,7 +141,7 @@ export default function ProfileScreen() {
           <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 4 }}>{currentUser?.name || 'User'}</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>{currentUser?.email}</div>
           {isPro && (
-            <div style={{ background: 'rgba(79,70,229,0.12)', color: 'var(--primary)', fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 8, letterSpacing: '0.06em' }}>
+            <div style={{ background: 'rgba(79,70,229,0.12)', color: 'var(--primary-text)', fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 8, letterSpacing: '0.06em' }}>
               PRO LEARNER
             </div>
           )}
@@ -195,6 +191,6 @@ export default function ProfileScreen() {
 
       <Chatbot />
       <BottomNav />
-    </motion.div>
+    </div>
   );
 }

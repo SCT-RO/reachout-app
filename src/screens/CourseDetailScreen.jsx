@@ -27,13 +27,16 @@ function PurchaseOptionsSheet({ course, onClose, onSelectInApp, onSelectCCAvenue
       onClick={onClose}
     >
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="purchase-sheet-title"
         initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 220 }}
         onClick={e => e.stopPropagation()}
         style={{ background: 'var(--bg-surface)', width: '100%', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '24px 20px 36px' }}
       >
-        <div style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 20px' }} />
-        <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Choose how to pay</div>
+        <div aria-hidden="true" style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 20px' }} />
+        <div id="purchase-sheet-title" style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Choose how to pay</div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>{course.title}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -41,15 +44,15 @@ function PurchaseOptionsSheet({ course, onClose, onSelectInApp, onSelectCCAvenue
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={onSelectInApp}
-            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(79,70,229,0.08)', border: '1.5px solid var(--primary)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(79,70,229,0.08)', border: '1.5px solid var(--primary)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%', color: 'var(--text-primary)' }}
           >
-            <div style={{ color: 'var(--primary)', flexShrink: 0 }}><IconPhone /></div>
+            <div style={{ color: 'var(--primary-text)', flexShrink: 0 }}><IconPhone /></div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>In-App Purchase</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>via Google Play / App Store</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--primary)' }}>₹{course.price.toLocaleString()}</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--primary-text)' }}>₹{course.price.toLocaleString()}</div>
             </div>
           </motion.button>
 
@@ -58,7 +61,7 @@ function PurchaseOptionsSheet({ course, onClose, onSelectInApp, onSelectCCAvenue
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={onSelectCCAvenue}
-              style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(245,158,11,0.08)', border: '1.5px solid var(--warning)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 18px', background: 'rgba(245,158,11,0.08)', border: '1.5px solid var(--warning)', borderRadius: 16, cursor: 'pointer', textAlign: 'left', width: '100%', color: 'var(--text-primary)' }}
             >
               <div style={{ color: 'var(--warning)', flexShrink: 0 }}><IconCard /></div>
               <div style={{ flex: 1 }}>
@@ -145,6 +148,7 @@ export default function CourseDetailScreen() {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--bg-dark) 0%, rgba(24,24,27,0.15) 100%)' }} />
         <button
           onClick={() => navigate(-1)}
+          aria-label="Go back"
           style={{ position: 'absolute', top: 24, left: 16, background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: 8, color: '#fff', backdropFilter: 'blur(4px)', cursor: 'pointer' }}
         >
           <HiArrowLeft size={20} />
@@ -258,13 +262,14 @@ export default function CourseDetailScreen() {
               style={{ flex: 1, opacity: alreadyInCart ? 0.6 : 1 }}
               onClick={handleAddToCart}
               disabled={alreadyInCart}
+              aria-label={alreadyInCart ? `${course.title} is already in cart` : `Add ${course.title} to cart`}
             >
               {alreadyInCart
                 ? <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}><HiCheck size={16} /> In Cart</span>
                 : flyAnim ? <span style={{ color: 'var(--success)' }}>✓ Added!</span> : 'Add to Cart'
               }
             </motion.button>
-            <motion.button whileTap={{ scale: 0.96 }} className="btn-primary" style={{ flex: 1 }} onClick={handleBuyNow}>
+            <motion.button whileTap={{ scale: 0.96 }} className="btn-primary" style={{ flex: 1 }} onClick={handleBuyNow} aria-label={`Buy ${course.title}`}>
               Buy Now
             </motion.button>
           </>

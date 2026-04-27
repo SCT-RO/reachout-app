@@ -27,7 +27,7 @@ function ShakeField({ error, children }) {
             initial={{ opacity: 0, x: -4 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0 }}
-            style={{ fontSize: 12, color: 'var(--error)', marginTop: 5, paddingLeft: 4, fontWeight: 500 }}
+            style={{ fontSize: 12, color: 'var(--error-text)', marginTop: 5, paddingLeft: 4, fontWeight: 500 }}
             className="shake"
           >
             {error}

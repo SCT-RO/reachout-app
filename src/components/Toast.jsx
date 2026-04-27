@@ -4,6 +4,9 @@ export default function Toast({ message, type = 'success' }) {
   const bg = type === 'error' ? 'var(--error)' : type === 'warning' ? 'var(--warning)' : 'var(--success)';
   return (
     <motion.div
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -50, opacity: 0 }}

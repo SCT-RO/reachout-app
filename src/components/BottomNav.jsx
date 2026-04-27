@@ -31,13 +31,16 @@ export default function BottomNav() {
       {tabs.map(tab => {
         const isActive = activeId === tab.id;
         return (
-          <div
+          <button
             key={tab.id}
             onClick={() => navigate(tab.path)}
+            aria-label={tab.label}
+            aria-current={isActive ? 'page' : undefined}
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-              color: isActive ? 'var(--primary)' : 'var(--text-muted)',
+              color: isActive ? 'var(--primary-text)' : 'var(--text-muted)',
               flex: 1, position: 'relative', cursor: 'pointer', transition: 'color 0.2s',
+              background: 'none', border: 'none', padding: '0', minHeight: 44,
             }}
           >
             <div style={{ position: 'relative' }}>
@@ -55,7 +58,7 @@ export default function BottomNav() {
                 }}
               />
             )}
-          </div>
+          </button>
         );
       })}
     </div>

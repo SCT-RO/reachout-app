@@ -27,10 +27,13 @@ const CC_AVENUE_METHODS = [
 function RadioRow({ method, selected, onSelect, children }) {
   return (
     <div
-      onClick={() => onSelect(method.id)}
-      style={{ marginBottom: 10, border: `2px solid ${selected ? 'var(--primary)' : 'var(--border)'}`, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.2s', background: 'var(--bg-surface)' }}
+      style={{ marginBottom: 10, border: `2px solid ${selected ? 'var(--primary)' : 'var(--border)'}`, borderRadius: 14, overflow: 'hidden', transition: 'border-color 0.2s', background: 'var(--bg-surface)' }}
     >
-      <div style={{ padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+      <button
+        onClick={() => onSelect(method.id)}
+        aria-pressed={selected}
+        style={{ padding: 14, display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'Inter,sans-serif', color: 'var(--text-primary)' }}
+      >
         <div style={{ width: 36, height: 36, borderRadius: 10, background: selected ? 'rgba(79,70,229,0.12)' : 'var(--bg-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: selected ? 'var(--primary)' : 'var(--text-muted)', transition: 'all 0.2s', flexShrink: 0 }}>
           {method.icon}
         </div>
@@ -38,10 +41,10 @@ function RadioRow({ method, selected, onSelect, children }) {
           <div style={{ fontSize: 14, fontWeight: 600 }}>{method.label}</div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{method.sub}</div>
         </div>
-        <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${selected ? 'var(--primary)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div aria-hidden="true" style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${selected ? 'var(--primary)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {selected && <div style={{ width: 8, height: 8, background: 'var(--primary)', borderRadius: '50%' }} />}
         </div>
-      </div>
+      </button>
       <AnimatePresence>
         {selected && children && (
           <motion.div
@@ -97,7 +100,7 @@ export default function PaymentScreen() {
     >
       {/* Header */}
       <div style={{ padding: '24px 20px 14px', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-        <button onClick={() => navigate(-1)} style={{ color: 'var(--text-primary)', cursor: 'pointer' }}><HiArrowLeft /></button>
+        <button onClick={() => navigate(-1)} aria-label="Go back" style={{ color: 'var(--text-primary)', cursor: 'pointer' }}><HiArrowLeft /></button>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.01em' }}>
             {channel === 'inapp' ? 'In-App Purchase' : 'CC Avenue Payment'}
@@ -111,7 +114,7 @@ export default function PaymentScreen() {
       {/* Amount pill */}
       <div style={{ margin: '16px 20px 0', padding: '12px 16px', background: channel === 'inapp' ? 'rgba(79,70,229,0.1)' : 'rgba(245,158,11,0.1)', borderRadius: 14, border: `1px solid ${channel === 'inapp' ? 'rgba(79,70,229,0.2)' : 'rgba(245,158,11,0.25)'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>Amount to pay</div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: channel === 'inapp' ? 'var(--primary)' : 'var(--warning)' }}>₹{finalTotal.toLocaleString()}</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: channel === 'inapp' ? 'var(--primary-text)' : 'var(--warning)' }}>₹{finalTotal.toLocaleString()}</div>
       </div>
 
       <div className="hide-scrollbar" style={{ flex: 1, padding: '16px 20px', overflowY: 'auto', paddingBottom: 100 }}>
@@ -124,22 +127,32 @@ export default function PaymentScreen() {
               <RadioRow key={m.id} method={m} selected={selectedMethod === m.id} onSelect={setSelectedMethod}>
                 {m.id === 'card' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 12 }}>
-                    <input value={cardNum} onChange={e => setCardNum(fmtCard(e.target.value))} placeholder="Card Number" style={{ ...inputStyle, letterSpacing: '0.05em' }} />
+                    <label htmlFor="card-number" style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Card Number</label>
+                    <input id="card-number" value={cardNum} onChange={e => setCardNum(fmtCard(e.target.value))} placeholder="1234 5678 9012 3456" autoComplete="cc-number" inputMode="numeric" style={{ ...inputStyle, letterSpacing: '0.05em' }} />
                     <div style={{ display: 'flex', gap: 10 }}>
-                      <input value={expiry} onChange={e => setExpiry(fmtExpiry(e.target.value))} placeholder="MM/YY" style={{ ...inputStyle, flex: 1 }} />
-                      <input value={cvv} onChange={e => setCvv(e.target.value.replace(/\D/g, '').slice(0, 3))} placeholder="CVV" type="password" style={{ ...inputStyle, flex: 1 }} />
+                      <div style={{ flex: 1 }}>
+                        <label htmlFor="card-expiry" style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Expiry</label>
+                        <input id="card-expiry" value={expiry} onChange={e => setExpiry(fmtExpiry(e.target.value))} placeholder="MM/YY" autoComplete="cc-exp" inputMode="numeric" style={{ ...inputStyle, marginTop: 6 }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label htmlFor="card-cvv" style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>CVV</label>
+                        <input id="card-cvv" value={cvv} onChange={e => setCvv(e.target.value.replace(/\D/g, '').slice(0, 3))} placeholder="•••" type="password" autoComplete="cc-csc" inputMode="numeric" style={{ ...inputStyle, flex: 1, marginTop: 6 }} />
+                      </div>
                     </div>
-                    <input value={cardName} onChange={e => setCardName(e.target.value)} placeholder="Cardholder Name" style={{ ...inputStyle, textTransform: 'uppercase' }} />
+                    <label htmlFor="card-name" style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cardholder Name</label>
+                    <input id="card-name" value={cardName} onChange={e => setCardName(e.target.value)} placeholder="As on card" autoComplete="cc-name" style={{ ...inputStyle, textTransform: 'uppercase' }} />
                   </div>
                 )}
                 {m.id === 'upi' && (
                   <div style={{ paddingTop: 12 }}>
-                    <input value={upiId} onChange={e => setUpiId(e.target.value)} placeholder="yourname@upi" style={inputStyle} />
+                    <label htmlFor="upi-id" style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>UPI ID</label>
+                    <input id="upi-id" value={upiId} onChange={e => setUpiId(e.target.value)} placeholder="yourname@upi" autoComplete="off" style={inputStyle} />
                   </div>
                 )}
                 {m.id === 'netbanking' && (
                   <div style={{ paddingTop: 12 }}>
-                    <select value={bank} onChange={e => setBank(e.target.value)} style={{ ...inputStyle, appearance: 'none' }}>
+                    <label htmlFor="bank-select" style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Select Bank</label>
+                    <select id="bank-select" value={bank} onChange={e => setBank(e.target.value)} style={{ ...inputStyle, appearance: 'none' }}>
                       <option value="">Select your bank</option>
                       {['SBI', 'HDFC Bank', 'ICICI Bank', 'Axis Bank', 'Kotak Mahindra', 'Yes Bank', 'Bank of Baroda', 'Punjab National Bank'].map(b => (
                         <option key={b} value={b}>{b}</option>
@@ -156,7 +169,7 @@ export default function PaymentScreen() {
         {channel === 'inapp' && (
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', background: 'rgba(79,70,229,0.08)', border: '2px solid var(--primary)', borderRadius: 14 }}>
-              <div style={{ color: 'var(--primary)', flexShrink: 0 }}><IconPhone /></div>
+              <div style={{ color: 'var(--primary-text)', flexShrink: 0 }}><IconPhone /></div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>In-App Purchase</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Billed securely via Google Play / App Store</div>
@@ -192,7 +205,7 @@ export default function PaymentScreen() {
           <div style={{ height: 1, background: 'var(--border)', margin: '10px 0' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 17, fontWeight: 800 }}>
             <span>Total</span>
-            <span style={{ color: channel === 'inapp' ? 'var(--primary)' : 'var(--warning)' }}>₹{finalTotal.toLocaleString()}</span>
+            <span style={{ color: channel === 'inapp' ? 'var(--primary-text)' : 'var(--warning)' }}>₹{finalTotal.toLocaleString()}</span>
           </div>
         </div>
       </div>
