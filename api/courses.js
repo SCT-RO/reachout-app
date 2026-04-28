@@ -14,7 +14,7 @@ function mapRecord(record, index) {
     category: f['Category'] || 'General',
     instructor: f['Instructor'] || 'ReachOut Expert',
     instructorImg: f['InstructorImg'] || `https://i.pravatar.cc/150?u=${record.id}`,
-    image: f['Course Thumbnail'] || `https://picsum.photos/seed/${index + 1}/400/200`,
+    image: (Array.isArray(f['Course Thumbnail']) ? f['Course Thumbnail'][0]?.url : f['Course Thumbnail']) || `https://picsum.photos/seed/${index + 1}/400/200`,
     price: f['Price'] ?? 0,
     originalPrice: f['OriginalPrice'] ?? null,
     ccavenuePrice: f['CC Avenue Price'] ?? null,
