@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-import { getPurchased, getProgress } from '../utils/storage';
-import { courses } from '../data/courses';
+import { getPurchased, getContentProgress } from '../utils/storage';
+import { useCourses } from '../hooks/useCourses';
+import { findCoursePackage, getTotalContentCount } from '../data/courses';
 import BottomNav from '../components/BottomNav';
 import Chatbot from '../components/Chatbot';
 import { HiBookOpen } from '../components/Icons';
@@ -11,21 +12,27 @@ import { HiBookOpen } from '../components/Icons';
 export default function MyLearningScreen() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const { courses } = useCourses();
   const [purchasedCourses, setPurchasedCourses] = useState([]);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || courses.length === 0) return;
     const purchased = getPurchased(currentUser.userId);
-    // Map purchased items to full course objects, merging with real-time progress
     const enriched = purchased
       .map(p => {
-        const full = courses.find(c => c.id === p.id) || p;
-        const progress = getProgress(currentUser.userId, full.id);
-        return { ...full, percentComplete: progress.percentComplete };
+        const full = courses.find(c => String(c.id) === String(p.id)) || p;
+        const pkg = findCoursePackage(full.title || p.title || '');
+        let percentComplete = 0;
+        if (pkg) {
+          const cp = getContentProgress(currentUser.userId, String(full.id));
+          const total = getTotalContentCount(pkg);
+          percentComplete = total > 0 ? Math.round((cp.completedContent.length / total) * 100) : 0;
+        }
+        return { ...full, percentComplete };
       })
       .filter(Boolean);
     setPurchasedCourses(enriched);
-  }, [currentUser]);
+  }, [currentUser, courses]);
 
   return (
     <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-dark)', position: 'relative' }}>
@@ -59,11 +66,11 @@ export default function MyLearningScreen() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.06 }}
                 whileHover={{ scale: 1.01 }}
-                onClick={() => navigate(`/lesson/${c.id}`)}
-                aria-label={`${c.title} — ${pct}% complete${isDone ? ', completed' : ', continue learning'}`}
+                onClick={() => navigate(`/course/${c.id}/modules`)}
+                aria-label={`${c.title} — ${pct}% complete${isDone ? ', completed' : ', continue learning'} — tap to open`}
                 style={{ display: 'flex', gap: 14, marginBottom: 14, padding: 12, background: 'var(--bg-surface)', borderRadius: 16, cursor: 'pointer', border: '1px solid var(--border)', width: '100%', textAlign: 'left', fontFamily: 'Inter,sans-serif', color: 'var(--text-primary)' }}
               >
-                <img src={c.image} alt={c.title} style={{ width: 76, height: 76, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} crossOrigin="anonymous" />
+                <img src={c.image} alt={c.title} style={{ width: 76, height: 76, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', letterSpacing: '-0.01em', marginBottom: 2 }}>

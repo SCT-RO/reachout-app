@@ -10,11 +10,11 @@ export async function fetchCourses() {
     if (!res.ok) throw new Error(`API returned ${res.status}`);
     const data = await res.json();
     if (!Array.isArray(data.courses) || data.courses.length === 0) {
-      throw new Error('Empty courses list from Notion');
+      throw new Error('Empty courses list from Airtable');
     }
     return data.courses;
   } catch (err) {
-    console.warn('[ReachOut] Notion fetch failed, using static data:', err.message);
+    console.warn('[ReachOut] Airtable fetch failed, using static data:', err.message);
     return staticCourses;
   }
 }

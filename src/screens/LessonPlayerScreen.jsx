@@ -201,7 +201,7 @@ function ImageModal({ lesson, courseImage, onClose }) {
           src={courseImage}
           alt={lesson.title}
           style={{ width: '100%', maxHeight: '100%', objectFit: 'contain' }}
-          crossOrigin="anonymous"
+         
         />
       </div>
 
@@ -562,7 +562,7 @@ export default function LessonPlayerScreen() {
         </div>
 
         {/* Full-height thumbnail */}
-        <img src={course.image} alt="" aria-hidden="true" crossOrigin="anonymous"
+        <img src={course.image} alt="" aria-hidden="true"
           style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isPlaying ? 0.3 : 0.55, position: 'absolute', inset: 0 }} />
 
         {/* Playback controls — centered */}
@@ -627,7 +627,7 @@ export default function LessonPlayerScreen() {
           />
         ) : (
           <>
-            <img src={course.image} alt="" aria-hidden="true" crossOrigin="anonymous"
+            <img src={course.image} alt="" aria-hidden="true"
               style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isPlaying ? 0.35 : 0.6, transition: 'opacity 0.3s', position: 'absolute', inset: 0 }} />
 
             {/* Lesson info overlay */}

@@ -107,7 +107,7 @@ export default function HomeScreen() {
                       style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-primary)', fontFamily: 'Inter,sans-serif' }}
                       onClick={() => { setSearchQ(''); navigate(`/course/${c.id}`); }}
                     >
-                      <img src={c.image} alt="" role="presentation" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} crossOrigin="anonymous" />
+                      <img src={c.image} alt="" role="presentation" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 600 }}>{c.title}</div>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{c.category}</div>
@@ -142,7 +142,7 @@ export default function HomeScreen() {
             style={{ height: 180, borderRadius: 20, overflow: 'hidden', position: 'relative', marginBottom: 20, cursor: 'pointer', width: '100%', border: 'none', padding: 0 }}
             onClick={() => navigate(`/course/${featured.id}`)}
           >
-            <img src={featured.image} alt="" role="presentation" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
+            <img src={featured.image} alt="" role="presentation" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(24,24,27,0.97) 5%, rgba(24,24,27,0.1) 85%)' }} />
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, padding: 16, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', zIndex: 1 }}>
               <div style={{ alignSelf: 'flex-start', background: 'rgba(79,70,229,0.9)', color: '#fff', padding: '3px 10px', borderRadius: 8, fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Featured</div>

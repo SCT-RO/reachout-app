@@ -148,6 +148,36 @@ export function saveAssignment(userId, assignmentData) {
   localStorage.setItem(`ro_assignments_${userId}`, JSON.stringify([...existing, assignmentData]));
 }
 
+// ─── CONTENT PROGRESS (hierarchy player) ─────────────────────────────────────
+export function getContentProgress(userId, courseId) {
+  const key = `ro_cp_${userId}_${courseId}`;
+  return JSON.parse(
+    localStorage.getItem(key) ||
+      JSON.stringify({ completedContent: [], percentComplete: 0, lastContentId: null, lastAccessedAt: null })
+  );
+}
+
+export function saveContentProgress(userId, courseId, data) {
+  localStorage.setItem(`ro_cp_${userId}_${courseId}`, JSON.stringify(data));
+}
+
+// ─── BOOKMARKS ────────────────────────────────────────────────────────────────
+export function getBookmarks(userId) {
+  return JSON.parse(localStorage.getItem(`ro_bookmarks_${userId}`) || '[]');
+}
+
+export function toggleBookmark(userId, courseId) {
+  const bookmarks = getBookmarks(userId);
+  const exists = bookmarks.includes(courseId);
+  const next = exists ? bookmarks.filter(id => id !== courseId) : [...bookmarks, courseId];
+  localStorage.setItem(`ro_bookmarks_${userId}`, JSON.stringify(next));
+  return !exists;
+}
+
+export function isBookmarked(userId, courseId) {
+  return getBookmarks(userId).includes(courseId);
+}
+
 // ─── SUPPORT MESSAGES ─────────────────────────────────────────────────────────
 export function getSupportMessages(userId) {
   return JSON.parse(localStorage.getItem(`ro_support_${userId}`) || '[]');

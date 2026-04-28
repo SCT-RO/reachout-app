@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { useApp } from '../context/AppContext';
 import { useCourses } from '../hooks/useCourses';
+import { getPurchased } from '../utils/storage';
 import { HiArrowLeft, HiStar, HiPlay, HiCheck, HiShoppingCart } from '../components/Icons';
 
 const IconPhone = () => (
@@ -95,6 +96,12 @@ export default function CourseDetailScreen() {
   const [showPurchaseSheet, setShowPurchaseSheet] = useState(false);
   const alreadyInCart = course ? isInCart(course.id) : false;
 
+  const isPurchased = useMemo(() => {
+    if (!currentUser || !course) return false;
+    const purchased = getPurchased(currentUser.userId);
+    return purchased.some(p => String(p.id) === String(course.id));
+  }, [currentUser, course]);
+
   if (!course) {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)', gap: 12 }}>
@@ -134,7 +141,7 @@ export default function CourseDetailScreen() {
   const handleEnrollFree = () => {
     purchase([course]);
     showToast('Enrolled! Start learning 🎉');
-    navigate('/learn');
+    navigate(`/course/${course.id}/modules`);
   };
 
   return (
@@ -144,7 +151,7 @@ export default function CourseDetailScreen() {
     >
       {/* Hero */}
       <div style={{ position: 'relative', height: 230, overflow: 'hidden', flexShrink: 0 }}>
-        <img src={course.image} alt={course.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} crossOrigin="anonymous" />
+        <img src={course.image} alt={course.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--bg-dark) 0%, rgba(24,24,27,0.15) 100%)' }} />
         <button
           onClick={() => navigate(-1)}
@@ -193,7 +200,7 @@ export default function CourseDetailScreen() {
         {/* Instructor */}
         <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>Instructor</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, padding: 14, background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)' }}>
-          <img src={course.instructorImg} alt={course.instructor} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }} crossOrigin="anonymous" />
+          <img src={course.instructorImg} alt={course.instructor} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }} />
           <div>
             <div style={{ fontWeight: 700, fontSize: 14 }}>{course.instructor}</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Expert in {course.category}</div>
@@ -250,7 +257,12 @@ export default function CourseDetailScreen() {
 
       {/* Footer buttons */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'var(--bg-dark)', borderTop: '1px solid var(--border)', padding: '14px 20px', display: 'flex', gap: 10, zIndex: 10 }}>
-        {course.price === 0 ? (
+        {isPurchased ? (
+          <motion.button whileTap={{ scale: 0.96 }} className="btn-primary" style={{ flex: 1 }}
+            onClick={() => navigate(`/course/${course.id}/modules`)}>
+            Continue Learning →
+          </motion.button>
+        ) : course.price === 0 ? (
           <motion.button whileTap={{ scale: 0.96 }} className="btn-primary" style={{ flex: 1 }} onClick={handleEnrollFree}>
             Enroll Now — Free
           </motion.button>

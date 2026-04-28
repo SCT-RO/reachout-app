@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchCourses } from '../utils/notion';
 
 const CACHE_KEY = 'ro_courses_cache';
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 60 * 1000; // 1 minute — keeps Airtable data fresh
 
 function getCached() {
   try {

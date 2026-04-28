@@ -165,7 +165,7 @@ export default function CartScreen() {
                     transition={{ duration: 0.25 }}
                     style={{ display: 'flex', gap: 12, padding: 14, background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)' }}
                   >
-                    <img src={item.image} alt={item.title} style={{ width: 64, height: 64, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} crossOrigin="anonymous" />
+                    <img src={item.image} alt={item.title} style={{ width: 64, height: 64, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.4, marginBottom: 4 }}>{item.title}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{item.instructor}</div>

@@ -10,7 +10,7 @@ const HiStar = ({ filled }) => (
 export default function CourseCard({ course }) {
   const navigate = useNavigate();
   const priceLabel = course.price === 0 ? 'Free' : `₹${course.price.toLocaleString()}`;
-  const ariaLabel = `${course.title} by ${course.instructor}. ${priceLabel}. Rated ${course.rating} out of 5.`;
+  const ariaLabel = `${course.title}. ${priceLabel}. Rated ${course.rating} out of 5.`;
 
   return (
     <motion.button
@@ -21,7 +21,7 @@ export default function CourseCard({ course }) {
       onClick={() => navigate(`/course/${course.id}`)}
     >
       <div style={{ aspectRatio: '16/9', width: '100%', position: 'relative', overflow: 'hidden' }}>
-        <img src={course.image} alt="" role="presentation" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} crossOrigin="anonymous" />
+        <img src={course.image} alt="" role="presentation" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         {course.price === 0 && (
           <div aria-hidden="true" style={{ position: 'absolute', top: 8, right: 8, background: '#15803d', color: '#fff', fontSize: 9, fontWeight: 700, padding: '3px 7px', borderRadius: 6, letterSpacing: '0.05em' }}>FREE</div>
         )}
@@ -29,7 +29,7 @@ export default function CourseCard({ course }) {
       <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div aria-hidden="true" style={{ fontSize: 9, color: 'var(--accent-text)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>{course.category}</div>
         <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 34 }}>{course.title}</div>
-        <div style={{ color: 'var(--text-muted)', fontSize: 11, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{course.instructor}</div>
+
         <div style={{ marginTop: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
             <HiStar filled />

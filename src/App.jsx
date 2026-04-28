@@ -20,6 +20,10 @@ import ChangePasswordScreen from './screens/ChangePasswordScreen';
 import SubmitAssignmentScreen from './screens/SubmitAssignmentScreen';
 import AssignmentSuccessScreen from './screens/AssignmentSuccessScreen';
 import HelpSupportScreen from './screens/HelpSupportScreen';
+import ModulesScreen from './screens/ModulesScreen';
+import ModuleDetailScreen from './screens/ModuleDetailScreen';
+import SubmoduleScreen from './screens/SubmoduleScreen';
+import ContentPlayerScreen from './screens/ContentPlayerScreen';
 
 // Phone frame reads dark mode + toast from context
 function PhoneFrame({ children }) {
@@ -62,6 +66,11 @@ function AppRoutes() {
       <Route path="/profile/assignment"         element={<ProtectedPage><SubmitAssignmentScreen /></ProtectedPage>} />
       <Route path="/profile/assignment/success" element={<ProtectedPage><AssignmentSuccessScreen /></ProtectedPage>} />
       <Route path="/profile/support"            element={<ProtectedPage><HelpSupportScreen /></ProtectedPage>} />
+
+      <Route path="/course/:courseId/modules"                                          element={<ProtectedPage><ModulesScreen /></ProtectedPage>} />
+      <Route path="/course/:courseId/module/:moduleId"                                 element={<ProtectedPage><ModuleDetailScreen /></ProtectedPage>} />
+      <Route path="/course/:courseId/module/:moduleId/submodule/:submoduleId"          element={<ProtectedPage><SubmoduleScreen /></ProtectedPage>} />
+      <Route path="/course/:courseId/content/:contentId"                               element={<ProtectedPage><ContentPlayerScreen /></ProtectedPage>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
