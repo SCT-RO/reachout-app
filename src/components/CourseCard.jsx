@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,8 +8,14 @@ const HiStar = ({ filled }) => (
   </svg>
 );
 
-export default function CourseCard({ course }) {
+function optimizeImage(src, width = 640) {
+  if (!src) return src;
+  return `/_vercel/image?url=${encodeURIComponent(src)}&w=${width}&q=75`;
+}
+
+export default function CourseCard({ course, priority = false }) {
   const navigate = useNavigate();
+  const [loaded, setLoaded] = useState(false);
   const priceLabel = course.price === 0 ? 'Free' : `₹${course.price.toLocaleString()}`;
   const ariaLabel = `${course.title}. ${priceLabel}. Rated ${course.rating} out of 5.`;
 
@@ -20,8 +27,21 @@ export default function CourseCard({ course }) {
       style={{ borderRadius: 16, overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column', textAlign: 'left', width: '100%', minHeight: 'unset', padding: 0, color: 'var(--text-primary)' }}
       onClick={() => navigate(`/course/${course.id}`)}
     >
-      <div style={{ aspectRatio: '16/9', width: '100%', position: 'relative', overflow: 'hidden' }}>
-        <img src={course.image} alt="" role="presentation" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      <div style={{ aspectRatio: '16/9', width: '100%', position: 'relative', overflow: 'hidden', background: 'var(--border)' }}>
+        {/* Skeleton shown until image loads */}
+        {!loaded && (
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, var(--border) 25%, var(--bg-surface) 50%, var(--border) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+        )}
+        <img
+          src={optimizeImage(course.image)}
+          alt=""
+          role="presentation"
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+          fetchpriority={priority ? 'high' : 'auto'}
+          onLoad={() => setLoaded(true)}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: loaded ? 1 : 0, transition: 'opacity 0.3s ease' }}
+        />
         {course.price === 0 && (
           <div aria-hidden="true" style={{ position: 'absolute', top: 8, right: 8, background: '#15803d', color: '#fff', fontSize: 9, fontWeight: 700, padding: '3px 7px', borderRadius: 6, letterSpacing: '0.05em' }}>FREE</div>
         )}

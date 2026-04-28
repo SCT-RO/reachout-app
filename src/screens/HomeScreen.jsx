@@ -191,7 +191,7 @@ export default function HomeScreen() {
                 </div>
               </div>
             ))
-            : filteredCourses.map(c => <CourseCard key={c.id} course={c} />)
+            : filteredCourses.map((c, i) => <CourseCard key={c.id} course={c} priority={i < 2} />)
           }
         </div>
 
