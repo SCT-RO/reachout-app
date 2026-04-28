@@ -39,7 +39,7 @@ export default function ModulesScreen() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { courses } = useCourses();
+  const { courses, isLoading } = useCourses();
   const { isModuleCompleted, isModuleUnlocked, getCourseProgress } = useProgress(currentUser?.userId, courseId);
 
   const course = courses.find(c => String(c.id) === courseId);
@@ -84,6 +84,14 @@ export default function ModulesScreen() {
     if (!isModuleUnlocked(mod.id, pkg)) return;
     navigate(`/course/${courseId}/module/${mod.id}`);
   };
+
+  if (isLoading && !course) {
+    return (
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
+  }
 
   if (!course || !pkg) {
     return (
