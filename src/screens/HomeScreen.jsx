@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
 import { useCourses } from '../hooks/useCourses';
+import { getPurchased } from '../utils/storage';
 import CourseCard from '../components/CourseCard';
 import BottomNav from '../components/BottomNav';
 import Chatbot from '../components/Chatbot';
@@ -191,7 +192,10 @@ export default function HomeScreen() {
                 </div>
               </div>
             ))
-            : filteredCourses.map((c, i) => <CourseCard key={c.id} course={c} priority={i < 2} />)
+            : filteredCourses.map((c, i) => {
+              const isEnrolled = getPurchased(currentUser?.userId || '').some(p => String(p.id) === String(c.id));
+              return <CourseCard key={c.id} course={c} priority={i < 2} onClick={() => navigate(isEnrolled ? `/course/${c.id}/modules` : `/course/${c.id}`)} />;
+            })
           }
         </div>
 

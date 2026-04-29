@@ -77,7 +77,7 @@ export default function MyLearningScreen() {
               >
                 <motion.button
                   whileHover={{ scale: 1.01 }}
-                  onClick={() => navigate(`/course/${c.id}`)}
+                  onClick={() => navigate(`/course/${c.id}/modules`)}
                   aria-label={`${c.title} — ${pct}% complete${isDone ? ', completed' : ', continue learning'} — tap to open`}
                   style={{ display: 'flex', gap: 14, padding: 12, background: 'var(--bg-surface)', borderRadius: 16, cursor: 'pointer', border: '1px solid var(--border)', width: '100%', textAlign: 'left', fontFamily: 'Inter,sans-serif', color: 'var(--text-primary)' }}
                 >

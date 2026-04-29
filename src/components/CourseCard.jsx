@@ -13,7 +13,7 @@ function optimizeImage(src, width = 640) {
   return `/_vercel/image?url=${encodeURIComponent(src)}&w=${width}&q=75`;
 }
 
-export default function CourseCard({ course, priority = false }) {
+export default function CourseCard({ course, priority = false, onClick }) {
   const navigate = useNavigate();
   const [loaded, setLoaded] = useState(false);
   const priceLabel = course.price === 0 ? 'Free' : `₹${course.price.toLocaleString()}`;
@@ -25,7 +25,7 @@ export default function CourseCard({ course, priority = false }) {
       className="glass-card"
       aria-label={ariaLabel}
       style={{ borderRadius: 16, overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column', textAlign: 'left', width: '100%', minHeight: 'unset', padding: 0, color: 'var(--text-primary)' }}
-      onClick={() => navigate(`/course/${course.id}`)}
+      onClick={() => onClick ? onClick() : navigate(`/course/${course.id}`)}
     >
       <div style={{ aspectRatio: '16/9', width: '100%', position: 'relative', overflow: 'hidden', background: 'var(--border)' }}>
         {/* Skeleton shown until image loads */}
