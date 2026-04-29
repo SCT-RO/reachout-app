@@ -66,7 +66,7 @@ export default function MyLearningScreen() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.06 }}
                 whileHover={{ scale: 1.01 }}
-                onClick={() => navigate(`/course/${c.id}/modules`)}
+                onClick={() => navigate(`/course/${c.id}`)}
                 aria-label={`${c.title} — ${pct}% complete${isDone ? ', completed' : ', continue learning'} — tap to open`}
                 style={{ display: 'flex', gap: 14, marginBottom: 14, padding: 12, background: 'var(--bg-surface)', borderRadius: 16, cursor: 'pointer', border: '1px solid var(--border)', width: '100%', textAlign: 'left', fontFamily: 'Inter,sans-serif', color: 'var(--text-primary)' }}
               >
@@ -76,7 +76,6 @@ export default function MyLearningScreen() {
                     <div style={{ fontSize: 13, fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', letterSpacing: '-0.01em', marginBottom: 2 }}>
                       {c.title}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{c.instructor}</div>
                   </div>
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 5 }}>

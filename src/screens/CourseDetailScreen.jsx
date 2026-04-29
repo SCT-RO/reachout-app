@@ -205,16 +205,6 @@ export default function CourseDetailScreen() {
           )}
         </div>
 
-        {/* Instructor */}
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>Instructor</h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, padding: 14, background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)' }}>
-          <img src={course.instructorImg} alt={course.instructor} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }} />
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>{course.instructor}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Expert in {course.category}</div>
-          </div>
-        </div>
-
         {/* Curriculum */}
         <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>Curriculum</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
