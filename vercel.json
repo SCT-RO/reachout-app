@@ -6,6 +6,6 @@
     "sizes": [320, 640, 960],
     "domains": ["dl.airtable.com", "v5.airtableusercontent.com", "images.unsplash.com", "picsum.photos", "i.pravatar.cc"],
     "formats": ["image/webp", "image/avif"],
-    "minimumCacheTTL": 2592000
+    "minimumCacheTTL": 86400
   }
 }

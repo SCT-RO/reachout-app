@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchCourses } from '../utils/notion';
 
 const CACHE_KEY = 'ro_courses_cache';
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
 
 function getCached() {
   try {
