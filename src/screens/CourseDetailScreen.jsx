@@ -6,7 +6,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useApp } from '../context/AppContext';
 import { useCourses } from '../hooks/useCourses';
 import { getPurchased } from '../utils/storage';
-import { HiArrowLeft, HiStar, HiPlay, HiCheck, HiShoppingCart } from '../components/Icons';
+import { findCoursePackage } from '../data/courses';
+import { HiArrowLeft, HiStar, HiCheck, HiShoppingCart, HiLockClosed } from '../components/Icons';
 
 const IconPhone = () => (
   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -92,6 +93,7 @@ export default function CourseDetailScreen() {
   const { courses, isLoading } = useCourses();
 
   const course = courses.find(c => String(c.id) === id || String(c.notionId) === id);
+  const pkg = course ? findCoursePackage(course.title) : null;
   const [flyAnim, setFlyAnim] = useState(false);
   const [showPurchaseSheet, setShowPurchaseSheet] = useState(false);
   const alreadyInCart = course ? isInCart(course.id) : false;
@@ -205,22 +207,36 @@ export default function CourseDetailScreen() {
           )}
         </div>
 
-        {/* Curriculum */}
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>Curriculum</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {(course.curriculum || []).map((les, i) => (
-            <div
-              key={les.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, border: '1px solid var(--border)', borderRadius: 12, background: i === 0 ? 'rgba(79,70,229,0.08)' : 'transparent' }}
-            >
-              <div style={{ background: 'var(--bg-surface)', width: 30, height: 30, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, border: '1px solid var(--border)', flexShrink: 0 }}>
+        {/* Modules */}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700 }}>Modules</h3>
+          {pkg && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{pkg.modules.length} modules</span>}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {pkg ? pkg.modules.map((mod, i) => (
+            <div key={mod.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 12, background: 'var(--bg-surface)', opacity: 0.85 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--bg-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, border: '1px solid var(--border)', flexShrink: 0, color: 'var(--text-muted)' }}>
+                {i + 1}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mod.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  {mod.type === 'submodules'
+                    ? `${mod.submodules?.length || 0} submodules`
+                    : `${mod.content?.length || 0} lessons`}
+                </div>
+              </div>
+              <HiLockClosed size={15} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+            </div>
+          )) : (course.curriculum || []).map((les, i) => (
+            <div key={les.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--border)', borderRadius: 12, background: 'var(--bg-surface)', opacity: 0.85 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--bg-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, border: '1px solid var(--border)', flexShrink: 0, color: 'var(--text-muted)' }}>
                 {i + 1}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{les.title}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{les.duration}</div>
               </div>
-              <div style={{ color: 'var(--text-muted)' }}><HiPlay size={18} /></div>
+              <HiLockClosed size={15} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
             </div>
           ))}
         </div>
