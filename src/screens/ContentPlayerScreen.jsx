@@ -358,7 +358,7 @@ export default function ContentPlayerScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser } = useAuth();
-  const { courses } = useCourses();
+  const { courses, isLoading } = useCourses();
   const { showToast } = useApp();
 
   const course = courses.find(c => String(c.id) === courseId);
@@ -479,6 +479,14 @@ export default function ContentPlayerScreen() {
     if (from) navigate(from);
     else navigate(`/course/${courseId}/modules`);
   };
+
+  if (isLoading && !course) {
+    return (
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
+  }
 
   if (!course || !pkg || !item) {
     return (

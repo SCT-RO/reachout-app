@@ -89,7 +89,7 @@ export default function CourseDetailScreen() {
   const { addToCart, isInCart, purchase } = useCart();
   const { currentUser } = useAuth();
   const { showToast } = useApp();
-  const { courses } = useCourses();
+  const { courses, isLoading } = useCourses();
 
   const course = courses.find(c => String(c.id) === id || String(c.notionId) === id);
   const [flyAnim, setFlyAnim] = useState(false);
@@ -101,6 +101,14 @@ export default function CourseDetailScreen() {
     const purchased = getPurchased(currentUser.userId);
     return purchased.some(p => String(p.id) === String(course.id));
   }, [currentUser, course]);
+
+  if (isLoading && !course) {
+    return (
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
+  }
 
   if (!course) {
     return (

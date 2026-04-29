@@ -111,7 +111,7 @@ export default function ModuleDetailScreen() {
   const { courseId, moduleId } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { courses } = useCourses();
+  const { courses, isLoading } = useCourses();
   const { isContentCompleted, getCourseProgress } = useProgress(currentUser?.userId, courseId);
   const [paywallContent, setPaywallContent] = useState(null);
 
@@ -127,6 +127,14 @@ export default function ModuleDetailScreen() {
 
   const progressData = getCourseProgress();
   const completedContent = progressData.completedContent || [];
+
+  if (isLoading && !course) {
+    return (
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
+  }
 
   if (!course || !pkg || !mod) {
     return (
