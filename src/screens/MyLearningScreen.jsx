@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-import { getPurchased, getContentProgress } from '../utils/storage';
+import { getPurchased, getContentProgress, removePurchased } from '../utils/storage';
 import { useCourses } from '../hooks/useCourses';
 import { findCoursePackage, getTotalContentCount } from '../data/courses';
 import BottomNav from '../components/BottomNav';
 import Chatbot from '../components/Chatbot';
-import { HiBookOpen } from '../components/Icons';
+import { HiBookOpen, HiXMark } from '../components/Icons';
 
 export default function MyLearningScreen() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const { courses } = useCourses();
   const [purchasedCourses, setPurchasedCourses] = useState([]);
+  const [confirmRemove, setConfirmRemove] = useState(null);
 
   useEffect(() => {
     if (!currentUser || courses.length === 0) return;
@@ -33,6 +34,12 @@ export default function MyLearningScreen() {
       .filter(Boolean);
     setPurchasedCourses(enriched);
   }, [currentUser, courses]);
+
+  const handleRemove = (courseId) => {
+    removePurchased(currentUser.userId, courseId);
+    setPurchasedCourses(prev => prev.filter(c => String(c.id) !== String(courseId)));
+    setConfirmRemove(null);
+  };
 
   return (
     <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-dark)', position: 'relative' }}>
@@ -60,46 +67,95 @@ export default function MyLearningScreen() {
             const pct = c.percentComplete || 0;
             const isDone = pct >= 100;
             return (
-              <motion.button
+              <motion.div
                 key={c.id}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -40 }}
                 transition={{ delay: idx * 0.06 }}
-                whileHover={{ scale: 1.01 }}
-                onClick={() => navigate(`/course/${c.id}`)}
-                aria-label={`${c.title} — ${pct}% complete${isDone ? ', completed' : ', continue learning'} — tap to open`}
-                style={{ display: 'flex', gap: 14, marginBottom: 14, padding: 12, background: 'var(--bg-surface)', borderRadius: 16, cursor: 'pointer', border: '1px solid var(--border)', width: '100%', textAlign: 'left', fontFamily: 'Inter,sans-serif', color: 'var(--text-primary)' }}
+                style={{ position: 'relative', marginBottom: 14 }}
               >
-                <img src={c.image} alt={c.title} style={{ width: 76, height: 76, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
-                  <div>
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  onClick={() => navigate(`/course/${c.id}`)}
+                  aria-label={`${c.title} — ${pct}% complete${isDone ? ', completed' : ', continue learning'} — tap to open`}
+                  style={{ display: 'flex', gap: 14, padding: 12, background: 'var(--bg-surface)', borderRadius: 16, cursor: 'pointer', border: '1px solid var(--border)', width: '100%', textAlign: 'left', fontFamily: 'Inter,sans-serif', color: 'var(--text-primary)' }}
+                >
+                  <img src={c.image} alt={c.title} style={{ width: 76, height: 76, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0, paddingRight: 20 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', letterSpacing: '-0.01em', marginBottom: 2 }}>
                       {c.title}
                     </div>
-                  </div>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 5 }}>
-                      <span>{pct}% complete</span>
-                      {isDone
-                        ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>✓ Done</span>
-                        : <span style={{ color: 'var(--accent-text)', fontWeight: 600 }}>Continue →</span>
-                      }
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 5 }}>
+                        <span>{pct}% complete</span>
+                        {isDone
+                          ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>✓ Done</span>
+                          : <span style={{ color: 'var(--accent-text)', fontWeight: 600 }}>Continue →</span>
+                        }
+                      </div>
+                      <div style={{ height: 5, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ delay: 0.1 + idx * 0.06, duration: 0.8, ease: 'easeOut' }}
+                          style={{ height: '100%', background: isDone ? 'var(--success)' : 'var(--primary)', borderRadius: 3 }}
+                        />
+                      </div>
                     </div>
-                    <div style={{ height: 5, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ delay: 0.1 + idx * 0.06, duration: 0.8, ease: 'easeOut' }}
-                        style={{ height: '100%', background: isDone ? 'var(--success)' : 'var(--primary)', borderRadius: 3 }}
-                      />
-                    </div>
                   </div>
-                </div>
-              </motion.button>
+                </motion.button>
+
+                {/* Remove button */}
+                <button
+                  onClick={() => setConfirmRemove(c.id)}
+                  aria-label={`Remove ${c.title}`}
+                  style={{ position: 'absolute', top: 8, right: 8, width: 24, height: 24, borderRadius: '50%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', cursor: 'pointer', border: 'none' }}
+                >
+                  <HiXMark size={13} />
+                </button>
+              </motion.div>
             );
           })
         )}
       </div>
+
+      {/* Confirm remove sheet */}
+      <AnimatePresence>
+        {confirmRemove && (() => {
+          const course = purchasedCourses.find(c => String(c.id) === String(confirmRemove));
+          return (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
+              onClick={() => setConfirmRemove(null)}
+            >
+              <motion.div
+                initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+                onClick={e => e.stopPropagation()}
+                style={{ background: 'var(--bg-surface)', width: '100%', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '24px 20px 36px' }}
+              >
+                <div style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 20px' }} />
+                <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>Remove from My Learning?</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>
+                  "{course?.title}" will be removed. Your progress will be lost.
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button className="btn-outline" style={{ flex: 1 }} onClick={() => setConfirmRemove(null)}>Cancel</button>
+                  <button
+                    className="btn-primary"
+                    style={{ flex: 1, background: 'var(--error, #ef4444)' }}
+                    onClick={() => handleRemove(confirmRemove)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
 
       <Chatbot />
       <BottomNav />

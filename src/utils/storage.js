@@ -78,6 +78,11 @@ export function savePurchased(userId, items) {
   localStorage.setItem(`ro_purchased_${userId}`, JSON.stringify(items));
 }
 
+export function removePurchased(userId, courseId) {
+  const items = getPurchased(userId).filter(p => String(p.id) !== String(courseId));
+  savePurchased(userId, items);
+}
+
 // ─── PROGRESS ─────────────────────────────────────────────────────────────────
 export function getProgress(userId, courseId) {
   const key = `ro_progress_${userId}_${courseId}`;
