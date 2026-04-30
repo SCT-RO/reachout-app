@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { useCourses } from '../hooks/useCourses';
+import { useCourseStructure } from '../hooks/useCourseStructure';
 import { findCoursePackage } from '../data/courses';
-import { getModuleQuiz } from '../data/quizzes';
+import { getModuleQuizByOrder } from '../data/quizzes';
 import { getQuizResults, saveQuizResults } from '../utils/storage';
 import { HiArrowLeft, HiXCircle, HiCheckCircle } from '../components/Icons';
 
@@ -58,9 +59,14 @@ export default function ModuleQuizScreen() {
 
   const course = courses.find(c => String(c.id) === courseId);
   const pkg = course ? findCoursePackage(course.title) : null;
-  const mod = pkg?.modules?.find(m => m.id === moduleId);
-  // Use pkg.id (e.g. 'pkg_py') not the URL courseId (Airtable numeric ID)
-  const rawQuiz = useMemo(() => pkg ? getModuleQuiz(pkg.id, moduleId) : null, [pkg, moduleId]);
+  const { modules } = useCourseStructure(course?.title);
+  // Get mod from Airtable modules (moduleId in URL is an Airtable record ID)
+  const mod = modules.find(m => m.id === moduleId);
+  // Look up quiz by module order since Airtable record IDs don't match static quiz IDs
+  const rawQuiz = useMemo(() => {
+    if (!pkg || !mod) return null;
+    return getModuleQuizByOrder(pkg.id, mod.order);
+  }, [pkg, mod]);
 
   const userId = currentUser?.userId;
 

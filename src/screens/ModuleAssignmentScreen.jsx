@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { useCourses } from '../hooks/useCourses';
+import { useCourseStructure } from '../hooks/useCourseStructure';
 import { useApp } from '../context/AppContext';
 import { findCoursePackage } from '../data/courses';
-import { getModuleAssignment } from '../data/assignments';
+import { getModuleAssignmentByOrder } from '../data/assignments';
 import { getModuleAssignmentData, saveModuleAssignmentData } from '../utils/storage';
 import { useProgress } from '../hooks/useProgress';
 import {
@@ -49,16 +50,21 @@ export default function ModuleAssignmentScreen() {
   const userId = currentUser?.userId;
   const course = courses.find(c => String(c.id) === courseId);
   const pkg = course ? findCoursePackage(course.title) : null;
-  const mod = pkg?.modules?.find(m => m.id === moduleId);
-  // Use pkg.id (e.g. 'pkg_py') not the URL courseId (Airtable numeric ID)
-  const assignment = pkg ? getModuleAssignment(pkg.id, moduleId) : null;
+  const { modules } = useCourseStructure(course?.title);
+  // Get mod from Airtable modules (moduleId in URL is an Airtable record ID)
+  const mod = modules.find(m => m.id === moduleId);
+  // Look up assignment by module order since Airtable record IDs don't match static assignment IDs
+  const assignment = useMemo(() => {
+    if (!pkg || !mod) return null;
+    return getModuleAssignmentByOrder(pkg.id, mod.order);
+  }, [pkg, mod]);
 
   const existingData = useMemo(() =>
     userId ? getModuleAssignmentData(userId, courseId, moduleId) : null,
   [userId, courseId, moduleId]);
 
   const { isModuleUnlocked } = useProgress(userId, courseId);
-  const nextMod = pkg?.modules?.find(m => m.order === (mod?.order ?? 0) + 1);
+  const nextMod = modules.find(m => m.order === (mod?.order ?? 0) + 1);
 
   // View state: 'view' if already submitted and not resubmitting, else 'form'
   const [formMode, setFormMode] = useState(!existingData?.submitted);
@@ -104,7 +110,7 @@ export default function ModuleAssignmentScreen() {
 
   const handleNextModule = () => {
     if (!nextMod) { showToast('No next module available'); return; }
-    if (isModuleUnlocked(nextMod.id, pkg)) {
+    if (isModuleUnlocked(nextMod.id, { modules })) {
       navigate(`/course/${courseId}/module/${nextMod.id}`);
     } else {
       showToast('Complete this module first to unlock the next one');

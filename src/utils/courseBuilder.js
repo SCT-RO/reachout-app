@@ -1,3 +1,6 @@
+// Normalize for comparison: lowercase + collapse whitespace
+const norm = s => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+
 export async function buildCourseStructure(courseName) {
   const res = await fetch(`/api/courseStructure?courseName=${encodeURIComponent(courseName)}`);
   if (!res.ok) {
@@ -13,19 +16,19 @@ export async function buildCourseStructure(courseName) {
 
   return modules.map(mod => {
     const modSubmodules = submodules
-      .filter(s => s.moduleTitle === mod.title)
+      .filter(s => norm(s.moduleTitle) === norm(mod.title))
       .sort((a, b) => a.order - b.order)
       .map(sub => ({
         ...sub,
         content: contentItems
-          .filter(c => c.submoduleTitle === sub.title)
+          .filter(c => norm(c.submoduleTitle) === norm(sub.title))
           .sort((a, b) => a.order - b.order),
       }));
 
     const hasSubmodules = modSubmodules.length > 0;
 
     const directContent = contentItems
-      .filter(c => c.moduleTitle === mod.title && !c.submoduleTitle)
+      .filter(c => norm(c.moduleTitle) === norm(mod.title) && !c.submoduleTitle.trim())
       .sort((a, b) => a.order - b.order);
 
     return {

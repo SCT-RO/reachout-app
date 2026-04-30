@@ -1,0 +1,402 @@
+// ─── Module Assignments for all 6 course packages ────────────────────────────
+
+export const moduleAssignments = [
+  // ── pkg_py — Python for Data Science ──────────────────────────────────────
+  {
+    courseId: 'pkg_py', moduleId: 'py_m1',
+    title: 'Environment Setup Report',
+    briefDescription: 'Document your Python and Anaconda setup, run a simple script, and submit a screenshot report.',
+    objectives: [
+      'Successfully install Python and Anaconda on your machine',
+      'Create and run a Jupyter Notebook with a "Hello, Data Science!" cell',
+      'Document any setup issues you encountered and how you resolved them',
+    ],
+    deliverables: 'A PDF or Word document (max 1 page) with screenshots of your working Jupyter Notebook and a short paragraph describing your setup experience.',
+    acceptedFormats: ['PDF', 'DOCX', 'PNG'],
+    estimatedTime: '30 min',
+  },
+  {
+    courseId: 'pkg_py', moduleId: 'py_m2',
+    title: 'Python Fundamentals Mini-Project',
+    briefDescription: 'Write a Python script that demonstrates variables, control flow, and functions to solve a real-world problem.',
+    objectives: [
+      'Define at least 3 variables with different data types (int, float, string, list)',
+      'Use a for loop and an if/else statement in your solution',
+      'Create at least one reusable function with parameters and a return value',
+      'Include comments explaining your logic',
+    ],
+    deliverables: 'A .py file containing your script. The script should run without errors and print meaningful output to the console.',
+    acceptedFormats: ['PY', 'IPYNB', 'PDF'],
+    estimatedTime: '1 hr',
+  },
+  {
+    courseId: 'pkg_py', moduleId: 'py_m3',
+    title: 'Data Cleaning Exercise',
+    briefDescription: 'Download a messy dataset, clean it using Pandas, and document your process.',
+    objectives: [
+      'Load a CSV dataset into a Pandas DataFrame',
+      'Identify and handle at least 3 types of data quality issues (missing values, duplicates, wrong types)',
+      'Use groupby or aggregation to derive at least one insight from the cleaned data',
+      'Export the cleaned dataset to a new CSV file',
+    ],
+    deliverables: 'A Jupyter Notebook (.ipynb) showing your cleaning steps with commentary, plus the cleaned CSV file.',
+    acceptedFormats: ['IPYNB', 'ZIP', 'PDF'],
+    estimatedTime: '2 hrs',
+  },
+  {
+    courseId: 'pkg_py', moduleId: 'py_m4',
+    title: 'Data Story with Visualizations',
+    briefDescription: 'Create a mini data story using Matplotlib or Seaborn with at least 3 chart types.',
+    objectives: [
+      'Choose a dataset with at least 4 columns (can use the cleaned dataset from Module 3)',
+      'Create a line chart, a bar chart, and one additional chart type of your choice',
+      'Add titles, axis labels, and a legend to each chart',
+      'Write a 2-3 sentence narrative for each chart explaining the insight',
+    ],
+    deliverables: 'A Jupyter Notebook with all charts rendered inline and your written commentary.',
+    acceptedFormats: ['IPYNB', 'PDF'],
+    estimatedTime: '1.5 hrs',
+  },
+  {
+    courseId: 'pkg_py', moduleId: 'py_m5',
+    title: 'Train Your First ML Model',
+    briefDescription: 'Build, evaluate, and document a machine learning classification or regression model using scikit-learn.',
+    objectives: [
+      'Select a publicly available dataset (e.g., Iris, Titanic, or your own)',
+      'Perform a train/test split and explain your reasoning for the split ratio',
+      'Train at least one scikit-learn model and evaluate it with appropriate metrics',
+      'Plot a confusion matrix or residual plot and interpret the results',
+    ],
+    deliverables: 'A Jupyter Notebook with all code, evaluation metrics, and a brief written conclusion (3-5 sentences) on model performance.',
+    acceptedFormats: ['IPYNB', 'PDF'],
+    estimatedTime: '3 hrs',
+  },
+
+  // ── pkg_uiux — UI/UX Design Masterclass ───────────────────────────────────
+  {
+    courseId: 'pkg_uiux', moduleId: 'ux_m1',
+    title: 'Design Critique',
+    briefDescription: 'Analyse the UI/UX of an existing app you use daily and identify strengths and weaknesses.',
+    objectives: [
+      'Choose one mobile or web app you use regularly',
+      'Identify 2 design strengths with visual examples (screenshots)',
+      'Identify 2 design weaknesses and explain why they hinder the user experience',
+      'Suggest one specific improvement for each weakness',
+    ],
+    deliverables: 'A PDF slide deck (4-6 slides) with annotated screenshots and your analysis.',
+    acceptedFormats: ['PDF', 'PPTX'],
+    estimatedTime: '1 hr',
+  },
+  {
+    courseId: 'pkg_uiux', moduleId: 'ux_m2',
+    title: 'User Research Report',
+    briefDescription: 'Conduct 2-3 user interviews for a simple app idea and synthesise your findings.',
+    objectives: [
+      'Define a simple app concept (e.g., a habit tracker or recipe finder)',
+      'Create a 5-question interview guide',
+      'Interview 2-3 people and take notes',
+      'Synthesise findings into an affinity map with at least 3 themes',
+    ],
+    deliverables: 'A PDF or DOCX report including: your interview guide, anonymised notes, affinity map photo/diagram, and key insights summary.',
+    acceptedFormats: ['PDF', 'DOCX'],
+    estimatedTime: '2 hrs',
+  },
+  {
+    courseId: 'pkg_uiux', moduleId: 'ux_m3',
+    title: 'Low to High Fidelity Prototype',
+    briefDescription: 'Create a paper wireframe and then a Figma prototype for 3 screens of your app concept.',
+    objectives: [
+      'Sketch low-fidelity wireframes for 3 key screens on paper',
+      'Recreate those wireframes as mid-fidelity frames in Figma',
+      'Add at least 3 interactive connections between screens',
+      'Export the Figma prototype link for submission',
+    ],
+    deliverables: 'Photos of your paper sketches AND a shareable Figma prototype link (view-only).',
+    acceptedFormats: ['PDF', 'PNG', 'FIGMA_LINK'],
+    estimatedTime: '2.5 hrs',
+  },
+  {
+    courseId: 'pkg_uiux', moduleId: 'ux_m4',
+    title: 'Visual Design Style Tile',
+    briefDescription: 'Create a visual style tile for your app concept defining colours, typography, and component states.',
+    objectives: [
+      'Define a primary colour palette (3-5 colours) with hex codes and rationale',
+      'Select and pair 2 fonts (heading + body) and document usage rules',
+      'Design 3 common UI components (button, input field, card) showing default and active states',
+      'Ensure WCAG AA contrast compliance for text elements',
+    ],
+    deliverables: 'A Figma file or high-resolution PDF showing your style tile with all elements labelled.',
+    acceptedFormats: ['PDF', 'PNG', 'FIGMA_LINK'],
+    estimatedTime: '2 hrs',
+  },
+  {
+    courseId: 'pkg_uiux', moduleId: 'ux_m5',
+    title: 'Usability Test Report',
+    briefDescription: 'Conduct a moderated usability test on your Figma prototype and document the findings.',
+    objectives: [
+      'Prepare 3 tasks for participants to complete using your prototype',
+      'Run sessions with 2-3 participants (can be friends/family) and record observations',
+      'Identify at least 3 usability issues and rate their severity',
+      'Propose design improvements for each issue',
+    ],
+    deliverables: 'A PDF report with: test plan, session notes, issue list with severity ratings, and recommended design changes.',
+    acceptedFormats: ['PDF', 'DOCX'],
+    estimatedTime: '3 hrs',
+  },
+
+  // ── pkg_fin — Financial Modeling Fundamentals ──────────────────────────────
+  {
+    courseId: 'pkg_fin', moduleId: 'fin_m1',
+    title: 'Excel Financial Toolkit Setup',
+    briefDescription: 'Build a personal Excel template with key financial formulas and named ranges.',
+    objectives: [
+      'Set up an Excel workbook with at least 3 named ranges',
+      'Build a working VLOOKUP and an INDEX-MATCH formula',
+      'Create an IRR and NPV calculation using sample cash flows',
+      'Apply conditional formatting to highlight positive vs. negative values',
+    ],
+    deliverables: 'Your Excel workbook (.xlsx) with all formulas and named ranges clearly labelled.',
+    acceptedFormats: ['XLSX', 'PDF'],
+    estimatedTime: '1.5 hrs',
+  },
+  {
+    courseId: 'pkg_fin', moduleId: 'fin_m2',
+    title: 'Three-Statement Model',
+    briefDescription: 'Build a simplified three-statement financial model for a fictional company using the provided data.',
+    objectives: [
+      'Construct an income statement with revenue, COGS, and net income',
+      'Build a balance sheet that balances (Assets = Liabilities + Equity)',
+      'Prepare a cash flow statement using the indirect method',
+      'Link all three statements so changes in one flow through the others',
+    ],
+    deliverables: 'An Excel workbook with all three statements on separate tabs, fully linked and clearly formatted.',
+    acceptedFormats: ['XLSX', 'PDF'],
+    estimatedTime: '3 hrs',
+  },
+  {
+    courseId: 'pkg_fin', moduleId: 'fin_m3',
+    title: 'DCF Valuation Model',
+    briefDescription: 'Build a discounted cash flow model for a real public company using publicly available financials.',
+    objectives: [
+      'Project 5 years of free cash flows based on historical growth trends',
+      'Calculate WACC using publicly available data',
+      'Compute terminal value using the Gordon Growth Model or exit multiple',
+      'Run a sensitivity analysis on WACC and terminal growth rate',
+    ],
+    deliverables: 'An Excel workbook with the DCF model, sensitivity table, and a one-paragraph investment conclusion.',
+    acceptedFormats: ['XLSX', 'PDF'],
+    estimatedTime: '4 hrs',
+  },
+  {
+    courseId: 'pkg_fin', moduleId: 'fin_m4',
+    title: 'Valuation Case Study',
+    briefDescription: 'Value the provided fictional startup or real estate asset using at least two valuation methods.',
+    objectives: [
+      'Apply DCF analysis with your own assumptions',
+      'Apply comparable company or cap rate analysis',
+      'Reconcile the two valuations into a final valuation range',
+      'Present your conclusions in a structured one-page memo',
+    ],
+    deliverables: 'An Excel model plus a one-page PDF memo summarising your valuation range and key assumptions.',
+    acceptedFormats: ['XLSX', 'PDF', 'ZIP'],
+    estimatedTime: '4 hrs',
+  },
+
+  // ── pkg_lead — Leadership & Team Management ────────────────────────────────
+  {
+    courseId: 'pkg_lead', moduleId: 'lead_m1',
+    title: 'Personal Leadership Assessment',
+    briefDescription: 'Reflect on your own leadership style using the self-assessment tool and write a personal development plan.',
+    objectives: [
+      'Complete the leadership self-assessment and identify your primary style',
+      'Identify 2 strengths and 2 growth areas',
+      'Research one leader you admire and explain how their style aligns or contrasts with yours',
+      'Write 3 specific, measurable development goals for the next 90 days',
+    ],
+    deliverables: 'A 1-2 page PDF reflection document with your assessment results, analysis, and 90-day plan.',
+    acceptedFormats: ['PDF', 'DOCX'],
+    estimatedTime: '1.5 hrs',
+  },
+  {
+    courseId: 'pkg_lead', moduleId: 'lead_m2',
+    title: 'Team Onboarding Plan',
+    briefDescription: 'Create a 30-60-90 day onboarding plan for a new hire joining your team (real or hypothetical).',
+    objectives: [
+      'Define clear learning objectives for each 30-day milestone',
+      'List key people the new hire should meet and why',
+      'Outline 3 early-win projects appropriate for each stage',
+      'Include a check-in cadence (when and how you will review progress)',
+    ],
+    deliverables: 'A formatted PDF or DOCX document with the full 30-60-90 plan.',
+    acceptedFormats: ['PDF', 'DOCX'],
+    estimatedTime: '1.5 hrs',
+  },
+  {
+    courseId: 'pkg_lead', moduleId: 'lead_m3',
+    title: 'Feedback Role-Play Script',
+    briefDescription: 'Write a feedback conversation script using the SBI model for a difficult but realistic situation.',
+    objectives: [
+      'Describe the situation clearly (what happened, who was involved)',
+      'Draft the full SBI feedback statement',
+      'Write the anticipated response from the team member and your follow-up',
+      'Reflect on how you would ensure psychological safety during this conversation',
+    ],
+    deliverables: 'A 1-page PDF with the scenario description, full SBI script, and your reflection.',
+    acceptedFormats: ['PDF', 'DOCX'],
+    estimatedTime: '1 hr',
+  },
+  {
+    courseId: 'pkg_lead', moduleId: 'lead_m4',
+    title: 'Team OKR Design',
+    briefDescription: 'Write a set of OKRs for a real or hypothetical team for the next quarter.',
+    objectives: [
+      'Define 1 high-level Objective that is inspiring and directional',
+      'Write 3 Key Results that are measurable and time-bound',
+      'Conduct a SWOT analysis of the team to inform the OKRs',
+      'Identify the top 2 risks to achieving these OKRs and mitigation strategies',
+    ],
+    deliverables: 'A PDF document with the OKR set, SWOT analysis, and risk section.',
+    acceptedFormats: ['PDF', 'DOCX'],
+    estimatedTime: '2 hrs',
+  },
+
+  // ── pkg_rn — React Native Development ─────────────────────────────────────
+  {
+    courseId: 'pkg_rn', moduleId: 'rn_m1',
+    title: 'Hello World App Setup',
+    briefDescription: 'Set up your React Native development environment and run a custom Hello World app on a simulator or device.',
+    objectives: [
+      'Install Node.js, Expo CLI, and create a new Expo project',
+      'Run the app on the iOS Simulator or Android Emulator (screenshot required)',
+      'Run the app on a real device using Expo Go (screenshot required)',
+      'Modify the default screen to display your name and a custom message',
+    ],
+    deliverables: 'Screenshots of the app running on simulator and device, plus your modified App.js code as a .js or .zip file.',
+    acceptedFormats: ['ZIP', 'PDF', 'PNG'],
+    estimatedTime: '1.5 hrs',
+  },
+  {
+    courseId: 'pkg_rn', moduleId: 'rn_m2',
+    title: 'Multi-Screen App with Navigation',
+    briefDescription: 'Build a 3-screen app using React Navigation with a mix of stack and tab navigation.',
+    objectives: [
+      'Implement a bottom tab navigator with at least 3 tabs',
+      'Add a stack navigator within one tab with at least 2 screens',
+      'Pass data between screens using navigation params',
+      'Manage simple state with useState and display it across screens',
+    ],
+    deliverables: 'Your project folder zipped (.zip) and 3 screenshots showing each navigation pattern.',
+    acceptedFormats: ['ZIP', 'PDF'],
+    estimatedTime: '3 hrs',
+  },
+  {
+    courseId: 'pkg_rn', moduleId: 'rn_m3',
+    title: 'API-Powered Screen',
+    briefDescription: 'Build a screen that fetches data from a public API and displays it with loading and error states.',
+    objectives: [
+      'Choose a public API (e.g., JSONPlaceholder, Open Weather, or REST Countries)',
+      'Implement loading, success, and error states using useState/useEffect',
+      'Display the fetched data in a FlatList with at least 3 data fields per item',
+      'Store the last fetched result in AsyncStorage and display it on app reopen',
+    ],
+    deliverables: 'Your zipped project folder and a short README describing the API used and how to run the app.',
+    acceptedFormats: ['ZIP', 'PDF'],
+    estimatedTime: '3 hrs',
+  },
+  {
+    courseId: 'pkg_rn', moduleId: 'rn_m4',
+    title: 'App Publishing Plan',
+    briefDescription: 'Prepare all assets and documentation required to submit your app to the App Store or Play Store.',
+    objectives: [
+      'Create a 1024x1024 app icon and a splash screen at the correct dimensions',
+      'Write a compelling App Store description (title, subtitle, description)',
+      'Configure app.json with correct bundle ID, version, and permissions',
+      'Run EAS Build (or document the steps) and submit to TestFlight or Internal Testing',
+    ],
+    deliverables: 'A PDF publishing checklist with all assets attached, or a TestFlight/Internal Test link if the build was submitted.',
+    acceptedFormats: ['PDF', 'ZIP', 'PNG'],
+    estimatedTime: '3 hrs',
+  },
+
+  // ── pkg_dm — Digital Marketing Essentials ─────────────────────────────────
+  {
+    courseId: 'pkg_dm', moduleId: 'dm_m1',
+    title: 'Marketing Plan Template',
+    briefDescription: 'Fill in the marketing plan template for a real or hypothetical product.',
+    objectives: [
+      'Define target audience with a detailed buyer persona',
+      'Map the customer journey through Awareness, Consideration, and Conversion',
+      'Identify 3 marketing channels and justify your selection',
+      'Set 3 SMART marketing goals for a 90-day campaign',
+    ],
+    deliverables: 'A completed marketing plan PDF (2-3 pages) using the course template.',
+    acceptedFormats: ['PDF', 'DOCX'],
+    estimatedTime: '1.5 hrs',
+  },
+  {
+    courseId: 'pkg_dm', moduleId: 'dm_m2',
+    title: 'SEO Audit & Content Plan',
+    briefDescription: 'Conduct a basic SEO audit of a website and create a 4-week content calendar.',
+    objectives: [
+      'Audit 5 pages of a website for on-page SEO (title tags, meta descriptions, headings, alt text)',
+      'Research 10 relevant keywords using free tools (Google Keyword Planner or Ubersuggest)',
+      'Identify 3 SEO issues and provide specific recommendations',
+      'Create a 4-week content calendar with topic, keyword, format, and channel for each post',
+    ],
+    deliverables: 'A PDF with your SEO audit findings and a separate spreadsheet or table showing the content calendar.',
+    acceptedFormats: ['PDF', 'DOCX', 'XLSX'],
+    estimatedTime: '2.5 hrs',
+  },
+  {
+    courseId: 'pkg_dm', moduleId: 'dm_m3',
+    title: 'Social Media Campaign Brief',
+    briefDescription: 'Design a 2-week social media campaign for a product launch on two platforms.',
+    objectives: [
+      'Define campaign goal, target audience, and KPIs',
+      'Plan 10 organic posts (5 per platform) with content descriptions and posting schedule',
+      'Design 1 paid ad creative concept per platform with copy and visual description',
+      'Set a realistic budget allocation between platforms',
+    ],
+    deliverables: 'A PDF campaign brief with post plan, ad concepts, and budget table.',
+    acceptedFormats: ['PDF', 'DOCX'],
+    estimatedTime: '2 hrs',
+  },
+  {
+    courseId: 'pkg_dm', moduleId: 'dm_m4',
+    title: 'Email Welcome Sequence',
+    briefDescription: 'Write a 3-email welcome sequence for new subscribers to a newsletter or product.',
+    objectives: [
+      'Email 1: Welcome and deliver the lead magnet (if applicable)',
+      'Email 2: Brand story or key value proposition (send on Day 2)',
+      'Email 3: Social proof and soft CTA (send on Day 4)',
+      'Write compelling subject lines and preview text for each email',
+    ],
+    deliverables: 'A PDF with all 3 emails written out (subject line, preview text, body), including notes on send timing and segmentation.',
+    acceptedFormats: ['PDF', 'DOCX'],
+    estimatedTime: '2 hrs',
+  },
+  {
+    courseId: 'pkg_dm', moduleId: 'dm_m5',
+    title: 'Campaign Analytics Report',
+    briefDescription: 'Analyse a marketing campaign (real or provided dataset) and write a 1-page performance report.',
+    objectives: [
+      'Identify and calculate 5 key metrics from the campaign data',
+      'Compare performance against industry benchmarks',
+      'Identify the top-performing channel or content type with evidence',
+      'Provide 3 actionable recommendations for the next campaign cycle',
+    ],
+    deliverables: 'A 1-2 page PDF report with your analysis, charts (optional), and recommendations.',
+    acceptedFormats: ['PDF', 'DOCX'],
+    estimatedTime: '2 hrs',
+  },
+];
+
+export function getModuleAssignment(courseId, moduleId) {
+  return moduleAssignments.find(a => a.courseId === courseId && a.moduleId === moduleId) || null;
+}
+
+// Lookup by module order (1-based) — used when moduleId is an Airtable record ID
+export function getModuleAssignmentByOrder(pkgId, moduleOrder) {
+  const pkgAssignments = moduleAssignments.filter(a => a.courseId === pkgId);
+  return pkgAssignments[moduleOrder - 1] || null;
+}
