@@ -1,11 +1,5 @@
 {
   "rewrites": [
     { "source": "/((?!api/)[^.]*)", "destination": "/index.html" }
-  ],
-  "images": {
-    "sizes": [320, 640, 960],
-    "domains": ["dl.airtable.com", "v5.airtableusercontent.com", "images.unsplash.com", "picsum.photos", "i.pravatar.cc"],
-    "formats": ["image/webp", "image/avif"],
-    "minimumCacheTTL": 86400
-  }
+  ]
 }

@@ -8,11 +8,6 @@ const HiStar = ({ filled }) => (
   </svg>
 );
 
-function optimizeImage(src, width = 640) {
-  if (!src) return src;
-  return `/_vercel/image?url=${encodeURIComponent(src)}&w=${width}&q=75`;
-}
-
 export default function CourseCard({ course, priority = false, onClick }) {
   const navigate = useNavigate();
   const [loaded, setLoaded] = useState(false);
@@ -33,7 +28,7 @@ export default function CourseCard({ course, priority = false, onClick }) {
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, var(--border) 25%, var(--bg-surface) 50%, var(--border) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
         )}
         <img
-          src={optimizeImage(course.image)}
+          src={course.image}
           alt=""
           role="presentation"
           loading={priority ? 'eager' : 'lazy'}
