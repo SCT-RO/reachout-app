@@ -9,6 +9,7 @@ export async function buildCourseStructure(courseName) {
   }
 
   const { modules, submodules, contentItems } = await res.json();
+  console.log('[courseBuilder] raw:', modules.length, 'modules,', submodules.length, 'submodules,', contentItems.length, 'content items');
 
   if (!modules || modules.length === 0) {
     throw new Error('No modules returned from Airtable');
@@ -27,9 +28,17 @@ export async function buildCourseStructure(courseName) {
 
     const hasSubmodules = modSubmodules.length > 0;
 
-    const directContent = contentItems
-      .filter(c => norm(c.moduleTitle) === norm(mod.title) && !c.submoduleTitle.trim())
+    // All content matching this module title
+    const modContentItems = contentItems.filter(c => norm(c.moduleTitle) === norm(mod.title));
+
+    // Direct content: items with no submodule title, OR items whose submodule title
+    // doesn't match any of this module's submodules (defensive fallback)
+    const knownSubTitles = new Set(modSubmodules.map(s => norm(s.title)));
+    const directContent = modContentItems
+      .filter(c => !c.submoduleTitle.trim() || !knownSubTitles.has(norm(c.submoduleTitle)))
       .sort((a, b) => a.order - b.order);
+
+    console.log(`[courseBuilder] "${mod.title}": ${modContentItems.length} total items, ${directContent.length} direct, ${modSubmodules.length} submodules`);
 
     return {
       ...mod,

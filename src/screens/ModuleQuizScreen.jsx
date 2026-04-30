@@ -59,7 +59,7 @@ export default function ModuleQuizScreen() {
 
   const course = courses.find(c => String(c.id) === courseId);
   const pkg = course ? findCoursePackage(course.title) : null;
-  const { modules } = useCourseStructure(course?.title);
+  const { modules, isLoading: structLoading } = useCourseStructure(course?.title);
   // Get mod from Airtable modules (moduleId in URL is an Airtable record ID)
   const mod = modules.find(m => m.id === moduleId);
   // Look up quiz by module order since Airtable record IDs don't match static quiz IDs
@@ -140,7 +140,7 @@ export default function ModuleQuizScreen() {
     setScreen('quiz');
   };
 
-  if (isLoading && !course) {
+  if (isLoading && !course || structLoading && !mod) {
     return (
       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite' }} />
