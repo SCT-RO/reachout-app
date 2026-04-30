@@ -4,13 +4,74 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { useProgress } from '../hooks/useProgress';
 import { useCourses } from '../hooks/useCourses';
-import { getPurchased } from '../utils/storage';
+import { useCourseStructure } from '../hooks/useCourseStructure';
+import { getPurchased, getModuleCompletionStatus } from '../utils/storage';
 import { findCoursePackage } from '../data/courses';
 import PaywallSheet from '../components/PaywallSheet';
 import {
   HiArrowLeft, HiLockClosed, HiCheck, HiPlay,
   HiVideoCamera, HiMusicalNote, HiDocument, HiPhoto,
+  HiBookOpen, HiClipboardList, HiPaperClip, HiCheckCircle,
 } from '../components/Icons';
+
+// ─── Module Completion Checklist ─────────────────────────────────────────────
+function ChecklistRow({ icon: Icon, label, detail, done, actionLabel, onAction }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ width: 36, height: 36, borderRadius: 10, background: done ? 'rgba(34,197,94,0.12)' : 'var(--bg-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={18} style={{ color: done ? '#22C55E' : 'var(--text-muted)' }} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: 11, color: done ? '#22C55E' : 'var(--text-muted)' }}>{done ? 'Complete' : detail}</div>
+      </div>
+      {!done && actionLabel && (
+        <motion.button whileTap={{ scale: 0.96 }} onClick={onAction}
+          style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-text)', background: 'rgba(79,70,229,0.1)', border: '1px solid var(--primary)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', fontFamily: 'Inter,sans-serif', flexShrink: 0 }}>
+          {actionLabel}
+        </motion.button>
+      )}
+      {done && <HiCheckCircle size={18} style={{ color: '#22C55E', flexShrink: 0 }} />}
+    </div>
+  );
+}
+
+function ModuleCompletionChecklist({ courseId, moduleId, completionStatus, allModContent, completedInMod, nextMod, navigate }) {
+  const { contentComplete, quizSubmitted, assignmentSubmitted, fullyComplete } = completionStatus;
+  const cardStyle = fullyComplete
+    ? { background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 16, padding: 16, marginTop: 24 }
+    : { background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, marginTop: 24 };
+
+  return (
+    <div style={cardStyle}>
+      {fullyComplete ? (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 20, marginBottom: 6 }}>🎉</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#22C55E', marginBottom: 4 }}>Module Complete!</div>
+          {nextMod && (
+            <>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>Next: {nextMod.title}</div>
+              <motion.button whileTap={{ scale: 0.97 }} className="btn-primary" style={{ width: '100%' }}
+                onClick={() => navigate(`/course/${courseId}/module/${nextMod.id}`)}>
+                Continue to Next Module →
+              </motion.button>
+            </>
+          )}
+        </div>
+      ) : (
+        <>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Complete this module</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>Finish all 3 steps to unlock the next module</div>
+          <ChecklistRow icon={HiBookOpen} label="Watch / Read all lessons" detail={`${completedInMod.length}/${allModContent.length} completed`} done={contentComplete} />
+          <ChecklistRow icon={HiClipboardList} label="Take the module quiz" detail={quizSubmitted ? 'Attempted' : 'Not started'} done={quizSubmitted}
+            actionLabel={quizSubmitted ? 'Retake Quiz' : 'Take Quiz'} onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`)} />
+          <ChecklistRow icon={HiPaperClip} label="Submit your assignment" detail={assignmentSubmitted ? 'Submitted' : 'Not submitted'} done={assignmentSubmitted}
+            actionLabel="View Assignment" onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`)} />
+        </>
+      )}
+    </div>
+  );
+}
 
 const TYPE_META = {
   video: { color: '#3B82F6', bg: 'rgba(59,130,246,0.12)', Icon: HiVideoCamera },
@@ -33,13 +94,15 @@ export default function SubmoduleScreen() {
   const { courseId, moduleId, submoduleId } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { courses, isLoading } = useCourses();
+  const { courses, isLoading: coursesLoading } = useCourses();
   const { isContentCompleted } = useProgress(currentUser?.userId, courseId);
   const [paywallContent, setPaywallContent] = useState(null);
 
   const course = courses.find(c => String(c.id) === courseId);
   const pkg = course ? findCoursePackage(course.title) : null;
-  const mod = pkg?.modules?.find(m => m.id === moduleId);
+  const { modules, isLoading: structLoading } = useCourseStructure(course?.title);
+  const isLoading = coursesLoading || (structLoading && modules.length === 0);
+  const mod = modules.find(m => m.id === moduleId);
   const sub = mod?.submodules?.find(s => s.id === submoduleId);
 
   const isPurchased = useMemo(() => {
@@ -47,6 +110,23 @@ export default function SubmoduleScreen() {
     const purchased = getPurchased(currentUser.userId);
     return purchased.some(p => String(p.id) === courseId) || (course?.price === 0);
   }, [currentUser, courseId, course]);
+
+  // Module-level completion (parent module, not submodule)
+  const allModContent = useMemo(() => {
+    if (!mod) return [];
+    return (mod.submodules || []).flatMap(s => s.content || []);
+  }, [mod]);
+
+  const { getCourseProgress, isModuleUnlocked } = useProgress(currentUser?.userId, courseId);
+  const progressData = getCourseProgress();
+  const completedAllContent = progressData.completedContent || [];
+  const completedInMod = completedAllContent.filter(id => allModContent.some(c => c.id === id));
+
+  const completionStatus = currentUser ? getModuleCompletionStatus(
+    currentUser.userId, courseId, moduleId, completedInMod, allModContent.length
+  ) : { contentComplete: false, quizSubmitted: false, assignmentSubmitted: false, fullyComplete: false };
+
+  const nextMod = modules.find(m => m.order === (mod?.order ?? 0) + 1);
 
   if (isLoading && !course) {
     return (
@@ -56,7 +136,7 @@ export default function SubmoduleScreen() {
     );
   }
 
-  if (!course || !pkg || !mod || !sub) {
+  if (!course || !mod || !sub) {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)', gap: 12 }}>
         <div style={{ fontSize: 16, fontWeight: 700 }}>Submodule not found</div>
@@ -66,7 +146,7 @@ export default function SubmoduleScreen() {
   }
 
   const handleContentTap = (item) => {
-    const available = isPurchased || item.isPreview;
+    const available = isPurchased;
     if (!available) { setPaywallContent(item); return; }
     navigate(`/course/${courseId}/content/${item.id}`, {
       state: { from: `/course/${courseId}/module/${moduleId}/submodule/${submoduleId}` }
@@ -116,7 +196,7 @@ export default function SubmoduleScreen() {
         )}
 
         {(sub.content || []).map(item => {
-          const available = isPurchased || item.isPreview;
+          const available = isPurchased;
           const completed = isContentCompleted(item.id);
           return (
             <motion.button
@@ -136,9 +216,6 @@ export default function SubmoduleScreen() {
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
                   {item.duration && <span>{item.duration}</span>}
                   {item.size && <span>{item.size}</span>}
-                  {item.isPreview && (
-                    <span style={{ background: 'rgba(245,158,11,0.15)', color: 'var(--warning)', padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>PREVIEW</span>
-                  )}
                 </div>
               </div>
               <div style={{ flexShrink: 0, color: completed ? 'var(--success)' : available ? 'var(--primary-text)' : 'var(--text-muted)' }}>
@@ -147,6 +224,19 @@ export default function SubmoduleScreen() {
             </motion.button>
           );
         })}
+
+        {/* Module Completion Checklist */}
+        {isPurchased && (
+          <ModuleCompletionChecklist
+            courseId={courseId}
+            moduleId={moduleId}
+            completionStatus={completionStatus}
+            allModContent={allModContent}
+            completedInMod={completedInMod}
+            nextMod={nextMod}
+            navigate={navigate}
+          />
+        )}
       </div>
 
       <PaywallSheet

@@ -1,13 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { useProgress } from '../hooks/useProgress';
 import { useCourses } from '../hooks/useCourses';
+import { useCourseStructure } from '../hooks/useCourseStructure';
 import { getPurchased, isBookmarked, toggleBookmark } from '../utils/storage';
 import { findCoursePackage, getAllContent, getTotalContentCount } from '../data/courses';
 import {
-  HiArrowLeft, HiBookmark, HiChevronRight, HiLockClosed, HiCheckCircle,
+  HiArrowLeft, HiBookmark, HiChevronRight, HiLockClosed, HiCheckCircle, HiXMark,
 } from '../components/Icons';
 
 const CONTENT_COLORS = { video: '#3B82F6', audio: '#8B5CF6', pdf: '#EF4444', image: '#22C55E' };
@@ -39,11 +40,16 @@ export default function ModulesScreen() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { courses, isLoading } = useCourses();
+  const { courses, isLoading: coursesLoading } = useCourses();
   const { isModuleCompleted, isModuleUnlocked, getCourseProgress } = useProgress(currentUser?.userId, courseId);
 
   const course = courses.find(c => String(c.id) === courseId);
+  // pkg still used for instructor/rating metadata; modules come from Airtable
   const pkg = course ? findCoursePackage(course.title) : null;
+  const { modules, isLoading: structLoading } = useCourseStructure(course?.title);
+  const isLoading = coursesLoading || (structLoading && modules.length === 0);
+  // structPkg wraps Airtable modules in a pkg-shaped object for useProgress helpers
+  const structPkg = useMemo(() => ({ modules }), [modules]);
 
   const isPurchased = useMemo(() => {
     if (!currentUser) return false;
@@ -54,14 +60,12 @@ export default function ModulesScreen() {
   const [bookmarked, setBookmarked] = useState(() =>
     currentUser ? isBookmarked(currentUser.userId, courseId) : false
   );
+  const [lockedSheet, setLockedSheet] = useState(null); // { lockedMod, prevMod }
 
   const progressData = getCourseProgress();
-  const totalContent = pkg ? getTotalContentCount(pkg) : 0;
+  const totalContent = modules.length > 0 ? getTotalContentCount(structPkg) : 0;
   const completedCount = progressData.completedContent?.length || 0;
   const pct = totalContent > 0 ? Math.round((completedCount / totalContent) * 100) : 0;
-  const hasPreview = pkg?.modules?.some(m =>
-    getModuleContentList(m).some(c => c.isPreview)
-  );
 
   const handleBookmark = () => {
     if (!currentUser) return;
@@ -76,12 +80,16 @@ export default function ModulesScreen() {
       navigate(`/course/${courseId}/content/${lastId}`);
       return;
     }
-    const first = getAllContent(pkg)[0];
+    const first = getAllContent(structPkg)[0];
     if (first) navigate(`/course/${courseId}/content/${first.id}`);
   };
 
   const handleModuleTap = (mod) => {
-    if (!isModuleUnlocked(mod.id, pkg)) return;
+    if (!isModuleUnlocked(mod.id, structPkg)) {
+      const prevMod = modules.find(m => m.order === mod.order - 1);
+      setLockedSheet({ lockedMod: mod, prevMod });
+      return;
+    }
     navigate(`/course/${courseId}/module/${mod.id}`);
   };
 
@@ -93,7 +101,7 @@ export default function ModulesScreen() {
     );
   }
 
-  if (!course || !pkg) {
+  if (!course) {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)', gap: 12 }}>
         <div style={{ fontSize: 40 }}>😕</div>
@@ -138,13 +146,6 @@ export default function ModulesScreen() {
           </div>
         </div>
 
-        {/* Free preview note */}
-        {!isPurchased && hasPreview && (
-          <div style={{ margin: '12px 16px 0', padding: '10px 14px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 12, fontSize: 12, color: 'var(--warning)' }}>
-            👁 Some content is available as free preview
-          </div>
-        )}
-
         {/* Progress Overview Card */}
         <div style={{ margin: '14px 16px 0', padding: '16px', background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10 }}>
@@ -177,11 +178,11 @@ export default function ModulesScreen() {
 
         {/* Module List */}
         <div style={{ padding: '14px 16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{pkg.modules.length} Modules</div>
-          {pkg.modules.map((mod, idx) => {
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{modules.length} Modules</div>
+          {modules.map((mod, idx) => {
             const allContent = getModuleContentList(mod);
-            const unlocked = isModuleUnlocked(mod.id, pkg);
-            const completed = isModuleCompleted(mod.id, pkg);
+            const unlocked = isModuleUnlocked(mod.id, structPkg);
+            const completed = isModuleCompleted(mod.id, structPkg);
             const completedInMod = progressData.completedContent?.filter(id =>
               allContent.some(c => c.id === id)
             ).length || 0;
@@ -244,6 +245,60 @@ export default function ModulesScreen() {
           })}
         </div>
       </div>
+
+      {/* Locked Module Sheet */}
+      <AnimatePresence>
+        {lockedSheet && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', zIndex: 400, display: 'flex', alignItems: 'flex-end' }}
+            onClick={() => setLockedSheet(null)}
+          >
+            <motion.div
+              initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 240 }}
+              onClick={e => e.stopPropagation()}
+              style={{ background: 'var(--bg-surface)', width: '100%', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '28px 24px 40px', position: 'relative' }}
+            >
+              <button
+                onClick={() => setLockedSheet(null)}
+                aria-label="Close"
+                style={{ position: 'absolute', top: 16, right: 16, color: 'var(--text-muted)', padding: 4 }}
+              >
+                <HiXMark size={20} />
+              </button>
+              <div aria-hidden="true" style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 24px' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 12 }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(79,70,229,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-text)' }}>
+                  <HiLockClosed size={24} />
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 800 }}>Module Locked</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.55, maxWidth: 270 }}>
+                  Complete <strong style={{ color: 'var(--text-primary)' }}>{lockedSheet.prevMod?.title}</strong> to unlock this module.
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24 }}>
+                {lockedSheet.prevMod && (
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    className="btn-primary"
+                    onClick={() => { setLockedSheet(null); navigate(`/course/${courseId}/module/${lockedSheet.prevMod.id}`); }}
+                  >
+                    Go to {lockedSheet.prevMod.title}
+                  </motion.button>
+                )}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  className="btn-outline"
+                  onClick={() => setLockedSheet(null)}
+                >
+                  Close
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
