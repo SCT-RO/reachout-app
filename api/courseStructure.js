@@ -3,6 +3,8 @@ const BASE_ID = process.env.AIRTABLE_BASE_ID;
 const MODULES_TABLE = process.env.AIRTABLE_MODULES_TABLE;
 const SUBMODULES_TABLE = process.env.AIRTABLE_SUBMODULES_TABLE;
 const CONTENT_TABLE = process.env.AIRTABLE_CONTENT_TABLE;
+const QUIZZES_TABLE = process.env.AIRTABLE_QUIZZES_TABLE;
+const ASSIGNMENTS_TABLE = process.env.AIRTABLE_ASSIGNMENTS_TABLE;
 
 async function fetchAll(tableId, filterFormula) {
   const records = [];
@@ -64,7 +66,7 @@ export default async function handler(req, res) {
 
     const moduleTitles = modules.map(m => m.title).filter(Boolean);
 
-    // 2. Fetch submodules matching any module title from this course
+    // 2. Fetch submodules filtered by module titles
     let submodules = [];
     if (moduleTitles.length > 0) {
       const subsFilter = buildOrFormula('Module Title', moduleTitles);
@@ -80,15 +82,22 @@ export default async function handler(req, res) {
 
     const submoduleTitles = submodules.map(s => s.title).filter(Boolean);
 
-    // 3. Fetch content items matching module titles or submodule titles
-    let contentItems = [];
+    // 3. Fetch content, quizzes, and assignments in parallel
+    let contentItems = [], quizzes = [], assignments = [];
+
     if (moduleTitles.length > 0) {
       const modFilter = buildOrFormula('Module Title', moduleTitles);
       const subFilter = submoduleTitles.length > 0
         ? buildOrFormula('Submodule Title', submoduleTitles)
         : null;
-      const contentFilter = subFilter ? `OR(${modFilter},${subFilter})` : modFilter;
-      const contentRecords = await fetchAll(CONTENT_TABLE, contentFilter);
+      const combinedFilter = subFilter ? `OR(${modFilter},${subFilter})` : modFilter;
+
+      const [contentRecords, quizRecords, assignmentRecords] = await Promise.all([
+        fetchAll(CONTENT_TABLE, combinedFilter),
+        QUIZZES_TABLE ? fetchAll(QUIZZES_TABLE, combinedFilter) : Promise.resolve([]),
+        ASSIGNMENTS_TABLE ? fetchAll(ASSIGNMENTS_TABLE, combinedFilter) : Promise.resolve([]),
+      ]);
+
       contentItems = contentRecords.map(r => ({
         id: r.id,
         title: (r.fields['Content Title'] || r.fields['Title'] || '').trim(),
@@ -102,9 +111,38 @@ export default async function handler(req, res) {
         description: r.fields['Description'] || '',
         thumbnail: Array.isArray(r.fields['Thumbnail']) ? r.fields['Thumbnail'][0]?.url : (r.fields['Thumbnail'] || ''),
       })).sort((a, b) => a.order - b.order);
+
+      quizzes = quizRecords.map(r => ({
+        id: r.id,
+        question: r.fields['Question'] || '',
+        optionA: r.fields['Option A'] || '',
+        optionB: r.fields['Option B'] || '',
+        optionC: r.fields['Option C'] || '',
+        optionD: r.fields['Option D'] || '',
+        correctAnswer: r.fields['Correct Answer'] || 'A',
+        explanation: r.fields['Explanation'] || '',
+        order: r.fields['Order Number'] ?? 0,
+        moduleTitle: (r.fields['Module Title'] || '').trim(),
+        submoduleTitle: (r.fields['Submodule Title'] || '').trim(),
+      })).sort((a, b) => a.order - b.order);
+
+      assignments = assignmentRecords.map(r => ({
+        id: r.id,
+        title: r.fields['Assignment Title'] || '',
+        briefDescription: r.fields['Brief Description'] || '',
+        objective1: r.fields['Objective 1'] || '',
+        objective2: r.fields['Objective 2'] || '',
+        objective3: r.fields['Objective 3'] || '',
+        objective4: r.fields['Objective 4'] || '',
+        deliverables: r.fields['Deliverables'] || '',
+        acceptedFormats: r.fields['Accepted Formats'] || '',
+        estimatedTime: r.fields['Estimated Time'] || '',
+        moduleTitle: (r.fields['Module Title'] || '').trim(),
+        submoduleTitle: (r.fields['Submodule Title'] || '').trim(),
+      }));
     }
 
-    res.status(200).json({ modules, submodules, contentItems });
+    res.status(200).json({ modules, submodules, contentItems, quizzes, assignments });
   } catch (err) {
     console.error('courseStructure API error:', err.message);
     res.status(500).json({ error: err.message });

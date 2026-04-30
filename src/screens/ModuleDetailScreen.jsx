@@ -171,7 +171,7 @@ function ModuleCompletionChecklist({ courseId, moduleId, completionStatus, allMo
             detail={quizSubmitted ? 'Attempted' : 'Not started'}
             done={quizSubmitted}
             actionLabel={quizSubmitted ? 'Retake Quiz' : 'Take Quiz'}
-            onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`)}
+            onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`, { state: { moduleId, submoduleId: null } })}
           />
           <div style={{ borderBottom: 'none' }}>
             <ChecklistRow
@@ -180,7 +180,7 @@ function ModuleCompletionChecklist({ courseId, moduleId, completionStatus, allMo
               detail={assignmentSubmitted ? 'Submitted' : 'Not submitted'}
               done={assignmentSubmitted}
               actionLabel="View Assignment"
-              onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`)}
+              onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`, { state: { moduleId, submoduleId: null } })}
             />
           </div>
         </>

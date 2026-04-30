@@ -64,9 +64,9 @@ function ModuleCompletionChecklist({ courseId, moduleId, completionStatus, allMo
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>Finish all 3 steps to unlock the next module</div>
           <ChecklistRow icon={HiBookOpen} label="Watch / Read all lessons" detail={`${completedInMod.length}/${allModContent.length} completed`} done={contentComplete} />
           <ChecklistRow icon={HiClipboardList} label="Take the module quiz" detail={quizSubmitted ? 'Attempted' : 'Not started'} done={quizSubmitted}
-            actionLabel={quizSubmitted ? 'Retake Quiz' : 'Take Quiz'} onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`)} />
+            actionLabel={quizSubmitted ? 'Retake Quiz' : 'Take Quiz'} onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`, { state: { moduleId, submoduleId } })} />
           <ChecklistRow icon={HiPaperClip} label="Submit your assignment" detail={assignmentSubmitted ? 'Submitted' : 'Not submitted'} done={assignmentSubmitted}
-            actionLabel="View Assignment" onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`)} />
+            actionLabel="View Assignment" onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`, { state: { moduleId, submoduleId } })} />
         </>
       )}
     </div>

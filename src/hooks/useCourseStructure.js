@@ -17,6 +17,13 @@ function getCached(courseName) {
       sessionStorage.removeItem(cacheKey(courseName));
       return null;
     }
+    // Bust cache if it pre-dates quiz/assignment fields
+    const hasQuizzes = data?.[0]?.quiz !== undefined
+      || data?.[0]?.submodules?.[0]?.quiz !== undefined;
+    if (!hasQuizzes) {
+      sessionStorage.removeItem(cacheKey(courseName));
+      return null;
+    }
     return data;
   } catch {
     return null;

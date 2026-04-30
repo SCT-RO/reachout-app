@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { useCourses } from '../hooks/useCourses';
@@ -8,6 +8,19 @@ import { findCoursePackage } from '../data/courses';
 import { getModuleQuizByOrder } from '../data/quizzes';
 import { getQuizResults, saveQuizResults } from '../utils/storage';
 import { HiArrowLeft, HiXCircle, HiCheckCircle } from '../components/Icons';
+
+function findQuizInModules(modules, moduleId, submoduleId) {
+  for (const mod of modules) {
+    if (mod.id === moduleId) {
+      if (submoduleId) {
+        const sub = mod.submodules?.find(s => s.id === submoduleId);
+        return sub?.quiz ?? null;
+      }
+      return mod.quiz ?? null;
+    }
+  }
+  return null;
+}
 
 // ─── Fisher-Yates shuffle ─────────────────────────────────────────────────────
 function shuffle(arr) {
@@ -54,19 +67,23 @@ function ScoreRing({ score, total, pass }) {
 export default function ModuleQuizScreen() {
   const { courseId, moduleId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const submoduleId = location.state?.submoduleId ?? null;
   const { currentUser } = useAuth();
   const { courses, isLoading } = useCourses();
 
   const course = courses.find(c => String(c.id) === courseId);
   const pkg = course ? findCoursePackage(course.title) : null;
   const { modules, isLoading: structLoading } = useCourseStructure(course?.title);
-  // Get mod from Airtable modules (moduleId in URL is an Airtable record ID)
   const mod = modules.find(m => m.id === moduleId);
-  // Look up quiz by module order since Airtable record IDs don't match static quiz IDs
+
+  // Prefer Airtable quiz; fall back to local static data by module order
   const rawQuiz = useMemo(() => {
+    const airtableQuiz = findQuizInModules(modules, moduleId, submoduleId);
+    if (airtableQuiz) return airtableQuiz;
     if (!pkg || !mod) return null;
     return getModuleQuizByOrder(pkg.id, mod.order);
-  }, [pkg, mod]);
+  }, [modules, moduleId, submoduleId, pkg, mod]);
 
   const userId = currentUser?.userId;
 
