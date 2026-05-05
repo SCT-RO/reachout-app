@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
@@ -14,12 +14,18 @@ import {
   HiBookOpen, HiClipboardList, HiPaperClip, HiCheckCircle,
 } from '../components/Icons';
 
-// ─── Module Completion Checklist ─────────────────────────────────────────────
-function ChecklistRow({ icon: Icon, label, detail, done, actionLabel, onAction }) {
+function ChecklistRow({ icon: Icon, label, detail, done, actionLabel, onAction }: {
+  icon: React.ComponentType<{ size?: number }>;
+  label: string;
+  detail: string;
+  done: boolean;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
-      <div style={{ width: 36, height: 36, borderRadius: 10, background: done ? 'rgba(34,197,94,0.12)' : 'var(--bg-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Icon size={18} style={{ color: done ? '#22C55E' : 'var(--text-muted)' }} />
+      <div style={{ width: 36, height: 36, borderRadius: 10, background: done ? 'rgba(34,197,94,0.12)' : 'var(--bg-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: done ? '#22C55E' : 'var(--text-muted)' }}>
+        <Icon size={18} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{label}</div>
@@ -31,13 +37,30 @@ function ChecklistRow({ icon: Icon, label, detail, done, actionLabel, onAction }
           {actionLabel}
         </motion.button>
       )}
-      {done && <HiCheckCircle size={18} style={{ color: '#22C55E', flexShrink: 0 }} />}
+      {done && <div style={{ color: '#22C55E', flexShrink: 0 }}><HiCheckCircle size={18} /></div>}
     </div>
   );
 }
 
-function ModuleCompletionChecklist({ courseId, moduleId, completionStatus, allModContent, completedInMod, nextMod, navigate }) {
-  const { contentComplete, quizSubmitted, assignmentSubmitted, fullyComplete } = completionStatus;
+import type { CourseModule, ContentItem, ModuleCompletionStatus } from '../types';
+
+function ModuleCompletionChecklist({ courseId, moduleId, submoduleId, completionStatus, allModContent, completedInMod, nextMod, navigate, mod }: {
+  courseId: string;
+  moduleId: string;
+  submoduleId: string;
+  completionStatus: ModuleCompletionStatus;
+  allModContent: ContentItem[];
+  completedInMod: string[];
+  nextMod: CourseModule | undefined;
+  navigate: (path: string) => void;
+  mod: CourseModule;
+}) {
+  const { contentComplete, quizSubmitted, assignmentSubmitted } = completionStatus;
+  const hasQuiz = !!mod?.quiz;
+  const hasAssignment = !!mod?.assignment;
+  const stepsNeeded = 1 + (hasQuiz ? 1 : 0) + (hasAssignment ? 1 : 0);
+  const fullyComplete = contentComplete && (!hasQuiz || quizSubmitted) && (!hasAssignment || assignmentSubmitted);
+
   const cardStyle = fullyComplete
     ? { background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 16, padding: 16, marginTop: 24 }
     : { background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 16, marginTop: 24 };
@@ -61,12 +84,18 @@ function ModuleCompletionChecklist({ courseId, moduleId, completionStatus, allMo
       ) : (
         <>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Complete this module</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>Finish all 3 steps to unlock the next module</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+            Finish {stepsNeeded === 1 ? 'all lessons' : `all ${stepsNeeded} steps`} to unlock the next module
+          </div>
           <ChecklistRow icon={HiBookOpen} label="Watch / Read all lessons" detail={`${completedInMod.length}/${allModContent.length} completed`} done={contentComplete} />
-          <ChecklistRow icon={HiClipboardList} label="Take the module quiz" detail={quizSubmitted ? 'Attempted' : 'Not started'} done={quizSubmitted}
-            actionLabel={quizSubmitted ? 'Retake Quiz' : 'Take Quiz'} onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`, { state: { moduleId, submoduleId } })} />
-          <ChecklistRow icon={HiPaperClip} label="Submit your assignment" detail={assignmentSubmitted ? 'Submitted' : 'Not submitted'} done={assignmentSubmitted}
-            actionLabel="View Assignment" onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`, { state: { moduleId, submoduleId } })} />
+          {hasQuiz && (
+            <ChecklistRow icon={HiClipboardList} label="Take the module quiz" detail={quizSubmitted ? 'Attempted' : 'Not started'} done={quizSubmitted}
+              actionLabel={quizSubmitted ? 'Retake Quiz' : 'Take Quiz'} onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`, { state: { moduleId, submoduleId } })} />
+          )}
+          {hasAssignment && (
+            <ChecklistRow icon={HiPaperClip} label="Submit your assignment" detail={assignmentSubmitted ? 'Submitted' : 'Not submitted'} done={assignmentSubmitted}
+              actionLabel="View Assignment" onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`, { state: { moduleId, submoduleId } })} />
+          )}
         </>
       )}
     </div>
@@ -80,8 +109,8 @@ const TYPE_META = {
   image: { color: '#22C55E', bg: 'rgba(34,197,94,0.12)',  Icon: HiPhoto },
 };
 
-function ContentTypeIcon({ type }) {
-  const meta = TYPE_META[type] || TYPE_META.video;
+function ContentTypeIcon({ type }: { type: string }) {
+  const meta = TYPE_META[type as keyof typeof TYPE_META] || TYPE_META.video;
   const { Icon, color, bg } = meta;
   return (
     <div style={{ width: 36, height: 36, borderRadius: 10, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -95,11 +124,10 @@ export default function SubmoduleScreen() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { courses, isLoading: coursesLoading } = useCourses();
-  const { isContentCompleted } = useProgress(currentUser?.userId, courseId);
+  const { isContentCompleted, getCourseProgress, getModuleStatus } = useProgress(currentUser?.userId, courseId);
   const [paywallContent, setPaywallContent] = useState(null);
 
   const course = courses.find(c => String(c.id) === courseId);
-  const pkg = course ? findCoursePackage(course.title) : null;
   const { modules, isLoading: structLoading } = useCourseStructure(course?.title);
   const isLoading = coursesLoading || (structLoading && modules.length === 0);
   const mod = modules.find(m => m.id === moduleId);
@@ -111,19 +139,29 @@ export default function SubmoduleScreen() {
     return purchased.some(p => String(p.id) === courseId) || (course?.price === 0);
   }, [currentUser, courseId, course]);
 
-  // Module-level completion (parent module, not submodule)
+  // Redirect if parent module is locked
+  const moduleStatus = useMemo(() => {
+    if (!currentUser || !mod || modules.length === 0) return null;
+    return getModuleStatus(mod, modules);
+  }, [currentUser, mod, modules, getModuleStatus]);
+
+  useEffect(() => {
+    if (moduleStatus === 'locked') {
+      navigate(`/course/${courseId}/modules`, { replace: true });
+    }
+  }, [moduleStatus, courseId, navigate]);
+
   const allModContent = useMemo(() => {
     if (!mod) return [];
     return (mod.submodules || []).flatMap(s => s.content || []);
   }, [mod]);
 
-  const { getCourseProgress, isModuleUnlocked } = useProgress(currentUser?.userId, courseId);
   const progressData = getCourseProgress();
   const completedAllContent = progressData.completedContent || [];
   const completedInMod = completedAllContent.filter(id => allModContent.some(c => c.id === id));
 
   const completionStatus = currentUser ? getModuleCompletionStatus(
-    currentUser.userId, courseId, moduleId, completedInMod, allModContent.length
+    currentUser.userId, courseId ?? '', moduleId ?? '', completedInMod, allModContent.length
   ) : { contentComplete: false, quizSubmitted: false, assignmentSubmitted: false, fullyComplete: false };
 
   const nextMod = modules.find(m => m.order === (mod?.order ?? 0) + 1);
@@ -145,9 +183,8 @@ export default function SubmoduleScreen() {
     );
   }
 
-  const handleContentTap = (item) => {
-    const available = isPurchased;
-    if (!available) { setPaywallContent(item); return; }
+  const handleContentTap = (item: ContentItem) => {
+    if (!isPurchased) { setPaywallContent(item); return; }
     navigate(`/course/${courseId}/content/${item.id}`, {
       state: { from: `/course/${courseId}/module/${moduleId}/submodule/${submoduleId}` }
     });
@@ -162,7 +199,6 @@ export default function SubmoduleScreen() {
       initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.22 }}
       style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-dark)', position: 'relative', overflow: 'hidden' }}
     >
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px 14px', flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
         <button onClick={() => navigate(`/course/${courseId}/module/${moduleId}`)} aria-label="Back" style={{ color: 'var(--text-primary)', padding: 4 }}>
           <HiArrowLeft size={22} />
@@ -173,7 +209,6 @@ export default function SubmoduleScreen() {
         </div>
       </div>
 
-      {/* Mini progress */}
       {pct > 0 && (
         <div style={{ padding: '10px 16px 0', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 5 }}>
@@ -189,25 +224,23 @@ export default function SubmoduleScreen() {
         </div>
       )}
 
-      {/* Content list */}
       <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 32px' }}>
         {sub.description && (
           <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 18 }}>{sub.description}</p>
         )}
 
         {(sub.content || []).map(item => {
-          const available = isPurchased;
           const completed = isContentCompleted(item.id);
           return (
             <motion.button
               key={item.id}
-              whileTap={available ? { scale: 0.985 } : {}}
+              whileTap={isPurchased ? { scale: 0.985 } : {}}
               onClick={() => handleContentTap(item)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
                 borderBottom: '1px solid var(--border)', width: '100%', textAlign: 'left',
                 background: 'transparent', color: 'var(--text-primary)',
-                opacity: !available ? 0.5 : 1, cursor: available ? 'pointer' : 'default',
+                opacity: !isPurchased ? 0.5 : 1, cursor: isPurchased ? 'pointer' : 'default',
               }}
             >
               <ContentTypeIcon type={item.type} />
@@ -218,23 +251,24 @@ export default function SubmoduleScreen() {
                   {item.size && <span>{item.size}</span>}
                 </div>
               </div>
-              <div style={{ flexShrink: 0, color: completed ? 'var(--success)' : available ? 'var(--primary-text)' : 'var(--text-muted)' }}>
-                {completed ? <HiCheck size={18} /> : available ? <HiPlay size={18} /> : <HiLockClosed size={16} />}
+              <div style={{ flexShrink: 0, color: completed ? 'var(--success)' : isPurchased ? 'var(--primary-text)' : 'var(--text-muted)' }}>
+                {completed ? <HiCheck size={18} /> : isPurchased ? <HiPlay size={18} /> : <HiLockClosed size={16} />}
               </div>
             </motion.button>
           );
         })}
 
-        {/* Module Completion Checklist */}
         {isPurchased && (
           <ModuleCompletionChecklist
             courseId={courseId}
             moduleId={moduleId}
+            submoduleId={submoduleId}
             completionStatus={completionStatus}
             allModContent={allModContent}
             completedInMod={completedInMod}
             nextMod={nextMod}
             navigate={navigate}
+            mod={mod}
           />
         )}
       </div>

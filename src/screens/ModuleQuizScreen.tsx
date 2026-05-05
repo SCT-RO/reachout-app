@@ -177,6 +177,15 @@ export default function ModuleQuizScreen() {
     );
   }
 
+  // questions state is set by useEffect after rawQuiz resolves — guard the render
+  if (questions.length === 0) {
+    return (
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
+  }
+
   // ── RESULTS SCREEN ─────────────────────────────────────────────────────────
   if (screen === 'results' && results) {
     const { attempt, allResults } = results;

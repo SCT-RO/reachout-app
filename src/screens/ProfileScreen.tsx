@@ -19,7 +19,13 @@ function getInitials(name = '') {
 }
 
 // Reusable row inside a settings card
-function MenuRow({ icon, label, onPress, rightEl, danger }) {
+function MenuRow({ icon, label, onPress, rightEl, danger }: {
+  icon: React.ReactNode;
+  label: string;
+  onPress: () => void | Promise<void>;
+  rightEl?: React.ReactNode;
+  danger?: boolean;
+}) {
   return (
     <motion.div
       whileTap={{ opacity: 0.7 }}
@@ -49,7 +55,7 @@ function Divider() {
 }
 
 // Dark mode inline toggle
-function DarkToggleRow({ isDark, toggleDark }) {
+function DarkToggleRow({ isDark, toggleDark }: { isDark: boolean; toggleDark: () => void }) {
   return (
     <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{ color: 'var(--text-muted)', display: 'flex' }}>
@@ -71,7 +77,7 @@ function DarkToggleRow({ isDark, toggleDark }) {
 }
 
 // Logout confirmation bottom sheet
-function LogoutSheet({ onConfirm, onCancel }) {
+function LogoutSheet({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { Course } from '../types';
 import { fetchCourses } from '../utils/notion';
 
 const CACHE_KEY = 'ro_courses_cache';
@@ -19,7 +20,7 @@ function getCached() {
   }
 }
 
-function setCache(data) {
+function setCache(data: Course[]) {
   try {
     sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
   } catch {
@@ -28,9 +29,9 @@ function setCache(data) {
 }
 
 export function useCourses() {
-  const [courses, setCourses] = useState(() => getCached() || []);
+  const [courses, setCourses] = useState<Course[]>(() => getCached() || []);
   const [isLoading, setIsLoading] = useState(() => !getCached());
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (bustCache = false) => {
     if (bustCache) sessionStorage.removeItem(CACHE_KEY);
@@ -49,7 +50,7 @@ export function useCourses() {
       setCache(data);
       setCourses(data);
     } catch (err) {
-      setError(err.message || 'Failed to load courses');
+      setError((err as Error).message || 'Failed to load courses');
     } finally {
       setIsLoading(false);
     }

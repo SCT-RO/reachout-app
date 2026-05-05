@@ -1,20 +1,22 @@
+import type { CoursePackage, CourseModule, Submodule, ContentItem, Course } from '../types';
+
 // ─── Utility: find package matching an Airtable course title ─────────────────
-function slugify(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
-export function findCoursePackage(courseTitle) {
+function slugify(s: string): string { return (s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+export function findCoursePackage(courseTitle: string): CoursePackage | undefined {
   const slug = slugify(courseTitle);
-  return coursePackages.find(p => p.matchKeywords.some(kw => slug.includes(slugify(kw))));
+  return coursePackages.find((p: CoursePackage) => p.matchKeywords.some((kw: string) => slug.includes(slugify(kw))));
 }
 
 // ─── Utility: flatten all content across modules/submodules ──────────────────
-export function getAllContent(pkg) {
+export function getAllContent(pkg: CoursePackage | null | undefined): (ContentItem & { moduleId: string; submoduleId: string | null })[] {
   if (!pkg) return [];
-  const all = [];
+  const all: (ContentItem & { moduleId: string; submoduleId: string | null })[] = [];
   for (const mod of pkg.modules) {
     if (mod.type === 'content') {
-      (mod.content || []).forEach(c => all.push({ ...c, moduleId: mod.id, submoduleId: null }));
+      (mod.content || []).forEach((c: ContentItem) => all.push({ ...c, moduleId: mod.id, submoduleId: null }));
     } else {
       for (const sub of mod.submodules || []) {
-        (sub.content || []).forEach(c => all.push({ ...c, moduleId: mod.id, submoduleId: sub.id }));
+        (sub.content || []).forEach((c: ContentItem) => all.push({ ...c, moduleId: mod.id, submoduleId: sub.id }));
       }
     }
   }
@@ -22,15 +24,15 @@ export function getAllContent(pkg) {
 }
 
 // ─── Utility: find a single content item by id ───────────────────────────────
-export function findContent(pkg, contentId) {
+export function findContent(pkg: CoursePackage | null | undefined, contentId: string): { item: ContentItem; module: CourseModule; submodule: Submodule | null } | null {
   if (!pkg) return null;
   for (const mod of pkg.modules) {
     if (mod.type === 'content') {
-      const item = (mod.content || []).find(c => c.id === contentId);
+      const item = (mod.content || []).find((c: ContentItem) => c.id === contentId);
       if (item) return { item, module: mod, submodule: null };
     } else {
       for (const sub of mod.submodules || []) {
-        const item = (sub.content || []).find(c => c.id === contentId);
+        const item = (sub.content || []).find((c: ContentItem) => c.id === contentId);
         if (item) return { item, module: mod, submodule: sub };
       }
     }
@@ -39,12 +41,12 @@ export function findContent(pkg, contentId) {
 }
 
 // ─── Utility: count all content items in a package ───────────────────────────
-export function getTotalContentCount(pkg) {
+export function getTotalContentCount(pkg: CoursePackage | null | undefined): number {
   return getAllContent(pkg).length;
 }
 
 // ─── Course Packages (full hierarchy) ────────────────────────────────────────
-export const coursePackages = [
+export const coursePackages: CoursePackage[] = [
   // ── COURSE 1: Python for Data Science ──────────────────────────────────────
   {
     id: 'pkg_py',
@@ -613,7 +615,7 @@ export const coursePackages = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-export const courses = [
+export const courses: Course[] = [
   {
     id: 1,
     title: 'Python for Data Science',
@@ -654,6 +656,7 @@ export const courses = [
     duration: '12h',
     lessons: 48,
     image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&q=80',
+    featured: false,
     description:
       'Learn the full design process from research to high-fidelity prototyping using Figma. Build a portfolio-ready case study.',
     curriculum: [
@@ -681,6 +684,7 @@ export const courses = [
     duration: '22h',
     lessons: 72,
     image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80',
+    featured: false,
     description:
       'Build professional-grade financial models in Excel. Covers DCF analysis, LBO modeling, sensitivity analysis, and valuation techniques.',
     curriculum: [
@@ -706,6 +710,7 @@ export const courses = [
     duration: '8h',
     lessons: 32,
     image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=80',
+    featured: false,
     description:
       'Develop the mindset and skills to lead high-performing teams. Covers communication, conflict resolution, delegation, and building team culture.',
     curriculum: [
@@ -733,6 +738,7 @@ export const courses = [
     duration: '28h',
     lessons: 96,
     image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&q=80',
+    featured: false,
     description:
       'Build cross-platform iOS and Android apps using React Native and Expo. Covers navigation, state management, APIs, and deploying to app stores.',
     curriculum: [
@@ -760,6 +766,7 @@ export const courses = [
     duration: '15h',
     lessons: 55,
     image: 'https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&q=80',
+    featured: false,
     description:
       'Master digital marketing from SEO and content marketing to paid ads and analytics. Learn to build campaigns that drive real business results.',
     curriculum: [

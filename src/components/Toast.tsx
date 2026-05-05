@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-export default function Toast({ message, type = 'success' }) {
+export default function Toast({ message, type = 'success' }: { message: string; type?: string }) {
   const bg = type === 'error' ? 'var(--error)' : type === 'warning' ? 'var(--warning)' : 'var(--success)';
   return (
     <motion.div

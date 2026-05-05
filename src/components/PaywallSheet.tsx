@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import type { Course } from '../types';
 import { HiLockClosed, HiXMark } from './Icons';
 
-export default function PaywallSheet({ course, onClose, visible }) {
+export default function PaywallSheet({ course, onClose, visible }: { course?: Course | null; onClose: () => void; visible: boolean }) {
   const navigate = useNavigate();
 
   return (
@@ -55,14 +56,6 @@ export default function PaywallSheet({ course, onClose, visible }) {
                 onClick={() => { onClose(); navigate(`/course/${course?.id}`); }}
               >
                 {course?.price === 0 ? 'Enroll Now — Free' : `Enroll Now for ₹${course?.price?.toLocaleString()}`}
-              </motion.button>
-
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                className="btn-outline"
-                onClick={onClose}
-              >
-                View Free Preview
               </motion.button>
             </div>
           </motion.div>

@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { CourseModule } from '../types';
 import { buildCourseStructure } from '../utils/courseBuilder';
 import { findCoursePackage } from '../data/courses';
 
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-function cacheKey(courseName) {
-  return `ro_structure_${courseName}`;
+function cacheKey(courseName: string): string {
+  return `ro_structure_v2_${courseName}`;
 }
 
-function getCached(courseName) {
+function getCached(courseName: string): CourseModule[] | null {
   try {
     const raw = sessionStorage.getItem(cacheKey(courseName));
     if (!raw) return null;
@@ -30,7 +31,7 @@ function getCached(courseName) {
   }
 }
 
-function setCache(courseName, data) {
+function setCache(courseName: string, data: CourseModule[]): void {
   try {
     sessionStorage.setItem(cacheKey(courseName), JSON.stringify({ data, ts: Date.now() }));
   } catch {
@@ -38,13 +39,13 @@ function setCache(courseName, data) {
   }
 }
 
-function getFallback(courseName) {
+function getFallback(courseName: string): CourseModule[] {
   const pkg = findCoursePackage(courseName);
   return pkg?.modules || [];
 }
 
-export function useCourseStructure(courseName) {
-  const [modules, setModules] = useState(() => {
+export function useCourseStructure(courseName: string | undefined) {
+  const [modules, setModules] = useState<CourseModule[]>(() => {
     if (!courseName) return [];
     return getCached(courseName) || [];
   });
@@ -52,7 +53,7 @@ export function useCourseStructure(courseName) {
     if (!courseName) return false;
     return !getCached(courseName);
   });
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (bust = false) => {
     if (!courseName) return;
@@ -72,8 +73,8 @@ export function useCourseStructure(courseName) {
       setCache(courseName, result);
       setModules(result);
     } catch (err) {
-      console.warn('[ReachOut] courseStructure fetch failed, using static data:', err.message);
-      setError(err.message);
+      console.warn('[ReachOut] courseStructure fetch failed, using static data:', (err as Error).message);
+      setError((err as Error).message);
       setModules(getFallback(courseName));
     } finally {
       setIsLoading(false);

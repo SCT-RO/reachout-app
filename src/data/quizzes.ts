@@ -348,12 +348,12 @@ export const moduleQuizzes = [
   },
 ];
 
-export function getModuleQuiz(courseId, moduleId) {
+export function getModuleQuiz(courseId: string, moduleId: string) {
   return moduleQuizzes.find(q => q.courseId === courseId && q.moduleId === moduleId) || null;
 }
 
 // Lookup by module order (1-based) — used when moduleId is an Airtable record ID
-export function getModuleQuizByOrder(pkgId, moduleOrder) {
+export function getModuleQuizByOrder(pkgId: string, moduleOrder: number) {
   const pkgQuizzes = moduleQuizzes.filter(q => q.courseId === pkgId);
   return pkgQuizzes[moduleOrder - 1] || null;
 }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
@@ -129,8 +129,12 @@ function ChecklistRow({ icon: Icon, label, detail, status, actionLabel, onAction
   );
 }
 
-function ModuleCompletionChecklist({ courseId, moduleId, completionStatus, allModContent, completedInMod, nextMod, navigate }) {
-  const { contentComplete, quizSubmitted, assignmentSubmitted, fullyComplete } = completionStatus;
+function ModuleCompletionChecklist({ courseId, moduleId, completionStatus, allModContent, completedInMod, nextMod, navigate, mod }) {
+  const { contentComplete, quizSubmitted, assignmentSubmitted } = completionStatus;
+  const hasQuiz = !!mod?.quiz;
+  const hasAssignment = !!mod?.assignment;
+  const stepsNeeded = 1 + (hasQuiz ? 1 : 0) + (hasAssignment ? 1 : 0);
+  const fullyComplete = contentComplete && (!hasQuiz || quizSubmitted) && (!hasAssignment || assignmentSubmitted);
 
   const cardStyle = fullyComplete
     ? { background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 16, padding: '16px', marginTop: 24 }
@@ -158,31 +162,37 @@ function ModuleCompletionChecklist({ courseId, moduleId, completionStatus, allMo
       ) : (
         <>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Complete this module</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>Finish all 3 steps to unlock the next module</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+            Finish {stepsNeeded === 1 ? 'all lessons' : `all ${stepsNeeded} steps`} to unlock the next module
+          </div>
           <ChecklistRow
             icon={HiBookOpen}
             label="Watch / Read all lessons"
             detail={`${completedInMod.length}/${allModContent.length} completed`}
             done={contentComplete}
           />
-          <ChecklistRow
-            icon={HiClipboardList}
-            label="Take the module quiz"
-            detail={quizSubmitted ? 'Attempted' : 'Not started'}
-            done={quizSubmitted}
-            actionLabel={quizSubmitted ? 'Retake Quiz' : 'Take Quiz'}
-            onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`, { state: { moduleId, submoduleId: null } })}
-          />
-          <div style={{ borderBottom: 'none' }}>
+          {hasQuiz && (
             <ChecklistRow
-              icon={HiPaperClip}
-              label="Submit your assignment"
-              detail={assignmentSubmitted ? 'Submitted' : 'Not submitted'}
-              done={assignmentSubmitted}
-              actionLabel="View Assignment"
-              onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`, { state: { moduleId, submoduleId: null } })}
+              icon={HiClipboardList}
+              label="Take the module quiz"
+              detail={quizSubmitted ? 'Attempted' : 'Not started'}
+              done={quizSubmitted}
+              actionLabel={quizSubmitted ? 'Retake Quiz' : 'Take Quiz'}
+              onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`, { state: { moduleId, submoduleId: null } })}
             />
-          </div>
+          )}
+          {hasAssignment && (
+            <div style={{ borderBottom: 'none' }}>
+              <ChecklistRow
+                icon={HiPaperClip}
+                label="Submit your assignment"
+                detail={assignmentSubmitted ? 'Submitted' : 'Not submitted'}
+                done={assignmentSubmitted}
+                actionLabel="View Assignment"
+                onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`, { state: { moduleId, submoduleId: null } })}
+              />
+            </div>
+          )}
         </>
       )}
     </div>
@@ -194,7 +204,7 @@ export default function ModuleDetailScreen() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { courses, isLoading: coursesLoading } = useCourses();
-  const { isContentCompleted, getCourseProgress } = useProgress(currentUser?.userId, courseId);
+  const { isContentCompleted, getCourseProgress, getModuleStatus } = useProgress(currentUser?.userId, courseId);
   const [paywallContent, setPaywallContent] = useState(null);
 
   const course = courses.find(c => String(c.id) === courseId);
@@ -223,6 +233,18 @@ export default function ModuleDetailScreen() {
   const completionStatus = currentUser ? getModuleCompletionStatus(
     currentUser.userId, courseId, moduleId, completedInMod, allModContent.length
   ) : { contentComplete: false, quizSubmitted: false, assignmentSubmitted: false, fullyComplete: false };
+
+  // Redirect if module is locked (prevents URL-based bypass)
+  const moduleStatus = useMemo(() => {
+    if (!currentUser || !mod || modules.length === 0) return null;
+    return getModuleStatus(mod, modules);
+  }, [currentUser, mod, modules, getModuleStatus]);
+
+  useEffect(() => {
+    if (moduleStatus === 'locked') {
+      navigate(`/course/${courseId}/modules`, { replace: true });
+    }
+  }, [moduleStatus, courseId, navigate]);
 
   const nextMod = modules.find(m => m.order === (mod?.order ?? 0) + 1);
 
@@ -313,6 +335,7 @@ export default function ModuleDetailScreen() {
             completedInMod={completedInMod}
             nextMod={nextMod}
             navigate={navigate}
+            mod={mod}
           />
         )}
       </div>

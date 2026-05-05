@@ -13,7 +13,7 @@ const CONFETTI = [
   { angle: 300, color: '#8B5CF6', dist: 80 },
 ];
 
-function formatTime(iso) {
+function formatTime(iso: string): string {
   if (!iso) return '';
   const d = new Date(iso);
   const today = new Date().toDateString() === d.toDateString() ? 'Today' : d.toLocaleDateString();

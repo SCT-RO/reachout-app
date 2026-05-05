@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { Session, Toast, Course } from '../types';
 import {
   getUser, createUser, validateUser, updateUser,
   getSession, setSession, clearSession,
@@ -7,16 +8,37 @@ import {
   getUserPrefs, saveUserPrefs, updateUserProfile,
 } from '../utils/storage';
 
-const AppContext = createContext(null);
+export interface AppContextValue {
+  currentUser: Session | null;
+  isAuthenticated: boolean;
+  signup: (name: string, email: string, password: string) => Promise<{ error: string | null }>;
+  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  logout: () => void;
+  updateDisplayName: (name: string) => void;
+  updateProfile: (opts: { name?: string; email?: string }) => void;
+  isDark: boolean;
+  toggleDark: () => void;
+  cartItems: Course[];
+  addToCart: (course: Course) => void;
+  removeFromCart: (courseId: string | number) => void;
+  clearCart: () => void;
+  isInCart: (courseId: string | number) => boolean;
+  cartTotal: number;
+  purchase: (extraItems?: Course[]) => void;
+  toast: Toast | null;
+  showToast: (message: string, type?: string) => void;
+}
 
-export function AppProvider({ children }) {
+const AppContext = createContext<AppContextValue | null>(null);
+
+export function AppProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   // ─── Auth ──────────────────────────────────────────────────────────────────
   const [currentUser, setCurrentUser] = useState(() => getSession());
 
   // ─── Cart ──────────────────────────────────────────────────────────────────
-  const [cartItems, setCartItems] = useState(() => {
+  const [cartItems, setCartItems] = useState<Course[]>(() => {
     const s = getSession();
     return s ? getCart(s.userId) : [];
   });
@@ -30,7 +52,7 @@ export function AppProvider({ children }) {
   });
 
   // ─── Toast ─────────────────────────────────────────────────────────────────
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState<Toast | null>(null);
 
   // Reload cart + prefs when user changes
   useEffect(() => {
@@ -45,7 +67,7 @@ export function AppProvider({ children }) {
   }, [currentUser?.userId]);
 
   // ─── Auth actions ──────────────────────────────────────────────────────────
-  const signup = useCallback(async (name, email, password) => {
+  const signup = useCallback(async (name: string, email: string, password: string) => {
     if (getUser(email)) return { error: 'An account with this email already exists.' };
     const user = createUser({ name, email, password });
     const session = { userId: user.id, email: user.email, name: user.name };
@@ -55,7 +77,7 @@ export function AppProvider({ children }) {
     return { error: null };
   }, [navigate]);
 
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (email: string, password: string) => {
     const user = validateUser(email, password);
     if (!user) return { error: 'Invalid email or password.' };
     const session = { userId: user.id, email: user.email, name: user.name };
@@ -72,7 +94,7 @@ export function AppProvider({ children }) {
     navigate('/auth', { replace: true });
   }, [navigate]);
 
-  const updateDisplayName = useCallback((name) => {
+  const updateDisplayName = useCallback((name: string) => {
     if (!currentUser) return;
     updateUser(currentUser.userId, { name });
     const updated = { ...currentUser, name };
@@ -81,7 +103,7 @@ export function AppProvider({ children }) {
   }, [currentUser]);
 
   // Update both name and/or email (used by EditProfileScreen)
-  const updateProfile = useCallback(({ name, email }) => {
+  const updateProfile = useCallback(({ name, email }: { name?: string; email?: string }) => {
     if (!currentUser) return;
     updateUserProfile(currentUser.userId, { name, email });
     const updated = {
@@ -100,7 +122,7 @@ export function AppProvider({ children }) {
 
   // ─── Dark mode toggle ──────────────────────────────────────────────────────
   const toggleDark = useCallback(() => {
-    setIsDark(prev => {
+    setIsDark((prev: boolean) => {
       const next = !prev;
       localStorage.setItem('ro_dark_mode', String(next));
       if (currentUser) saveUserPrefs(currentUser.userId, { darkMode: next });
@@ -109,18 +131,18 @@ export function AppProvider({ children }) {
   }, [currentUser]);
 
   // ─── Cart actions ──────────────────────────────────────────────────────────
-  const addToCart = useCallback((course) => {
-    setCartItems(prev => {
-      if (prev.find(c => c.id === course.id)) return prev;
+  const addToCart = useCallback((course: Course) => {
+    setCartItems((prev: Course[]) => {
+      if (prev.find((c: Course) => c.id === course.id)) return prev;
       const next = [...prev, course];
       if (currentUser) saveCart(currentUser.userId, next);
       return next;
     });
   }, [currentUser]);
 
-  const removeFromCart = useCallback((courseId) => {
-    setCartItems(prev => {
-      const next = prev.filter(c => c.id !== courseId);
+  const removeFromCart = useCallback((courseId: string | number) => {
+    setCartItems((prev: Course[]) => {
+      const next = prev.filter((c: Course) => c.id !== courseId);
       if (currentUser) saveCart(currentUser.userId, next);
       return next;
     });
@@ -131,20 +153,20 @@ export function AppProvider({ children }) {
     if (currentUser) saveCart(currentUser.userId, []);
   }, [currentUser]);
 
-  const isInCart = useCallback((courseId) => {
-    return cartItems.some(c => c.id === courseId);
+  const isInCart = useCallback((courseId: string | number) => {
+    return cartItems.some((c: Course) => c.id === courseId);
   }, [cartItems]);
 
-  const cartTotal = cartItems.reduce((sum, c) => sum + (c.price || 0), 0);
+  const cartTotal = cartItems.reduce((sum: number, c: Course) => sum + (c.price || 0), 0);
 
   // Moves cartItems + any extraItems into the purchased list, then clears cart
-  const purchase = useCallback((extraItems = []) => {
+  const purchase = useCallback((extraItems: Course[] = []) => {
     if (!currentUser) return;
     const all = [...cartItems];
-    extraItems.forEach(item => { if (!all.find(i => i.id === item.id)) all.push(item); });
-    const existing = getPurchased(currentUser.userId);
+    extraItems.forEach((item: Course) => { if (!all.find((i: Course) => i.id === item.id)) all.push(item); });
+    const existing: Course[] = getPurchased(currentUser.userId);
     const merged = [...existing];
-    all.forEach(item => { if (!merged.find(p => p.id === item.id)) merged.push(item); });
+    all.forEach((item: Course) => { if (!merged.find((p: Course) => p.id === item.id)) merged.push(item); });
     savePurchased(currentUser.userId, merged);
     saveCart(currentUser.userId, []);
     setCartItems([]);
@@ -152,7 +174,7 @@ export function AppProvider({ children }) {
   }, [currentUser, cartItems]);
 
   // ─── Toast ─────────────────────────────────────────────────────────────────
-  const showToast = useCallback((message, type = 'success') => {
+  const showToast = useCallback((message: string, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
@@ -187,6 +209,6 @@ export function AppProvider({ children }) {
   );
 }
 
-export const useApp = () => useContext(AppContext);
-export const useAuth = () => useContext(AppContext);
-export const useCart = () => useContext(AppContext);
+export const useApp = () => useContext(AppContext)!;
+export const useAuth = () => useContext(AppContext)!;
+export const useCart = () => useContext(AppContext)!;

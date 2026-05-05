@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-import { useProgress } from '../hooks/useProgress';
+import { useProgress, getAllContentIds } from '../hooks/useProgress';
 import { useCourses } from '../hooks/useCourses';
 import { useCourseStructure } from '../hooks/useCourseStructure';
 import { useApp } from '../context/AppContext';
@@ -23,6 +23,12 @@ function fmtTime(s) {
   const m = Math.floor(s / 60);
   return `${m}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
 }
+
+const lineWidths = [
+  ['100%', '85%', '92%', '70%', '88%', '60%'],
+  ['95%',  '78%', '100%','65%', '82%', '55%'],
+  ['88%',  '100%','72%', '90%', '68%', '75%'],
+];
 
 const TYPE_META = {
   video: { label: 'VIDEO', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)', Icon: HiVideoCamera },
@@ -111,35 +117,6 @@ function AudioPlayer({ item, pkg, isPlaying, elapsed, totalSecs, onPlayPause, on
   );
 }
 
-// ─── COMPACT PDF PLAYER (fixed 220px) ─────────────────────────────────────────
-function PdfPlayer({ item, page, totalPages, onNext, onPrev, onDownload }) {
-  const lineWidths = [90, 70, 85, 60, 95, 75, 55, 80];
-  return (
-    <div style={{ height: '100%', background: 'var(--bg-surface)', display: 'flex', flexDirection: 'column', borderBottom: '1px solid var(--border)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px 6px', flexShrink: 0 }}>
-        <span style={{ fontSize: 11, background: 'rgba(239,68,68,0.1)', color: '#F87171', padding: '2px 8px', borderRadius: 5, fontWeight: 600 }}>
-          Page {page} of {totalPages}
-        </span>
-        <button onClick={onDownload} style={{ color: 'var(--text-muted)', padding: 4 }}><HiArrowDownTray size={16} /></button>
-      </div>
-      <motion.div key={page} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.15 }}
-        style={{ flex: 1, margin: '0 14px', background: 'var(--bg-dark)', borderRadius: 8, padding: '10px 12px', overflow: 'hidden', border: '1px solid var(--border)' }}>
-        <div style={{ height: 10, background: 'var(--border)', borderRadius: 3, width: '55%', marginBottom: 10, opacity: 0.8 }} />
-        {lineWidths.map((w, i) => (
-          <div key={i} style={{ height: 7, background: 'var(--border)', borderRadius: 2, width: `${w}%`, marginBottom: 7, opacity: 0.5 + (i % 2) * 0.15 }} />
-        ))}
-      </motion.div>
-      <div style={{ display: 'flex', gap: 8, padding: '8px 14px 10px', flexShrink: 0 }}>
-        <motion.button whileTap={{ scale: 0.96 }} className="btn-outline"
-          style={{ flex: 1, fontSize: 12, minHeight: 'unset', padding: '7px 0', opacity: page === 1 ? 0.4 : 1 }}
-          onClick={onPrev} disabled={page === 1}>← Prev</motion.button>
-        <motion.button whileTap={{ scale: 0.96 }} className="btn-primary"
-          style={{ flex: 1, fontSize: 12, minHeight: 'unset', padding: '7px 0' }}
-          onClick={onNext}>{page < totalPages ? 'Next →' : '✓ Done'}</motion.button>
-      </div>
-    </div>
-  );
-}
 
 // ─── COMPACT IMAGE VIEWER (fixed 220px) ───────────────────────────────────────
 function ImagePlayer({ item, pkg, onShare }) {
@@ -193,25 +170,39 @@ export default function ContentPlayerScreen() {
   const item = found?.item;
   const totalContent = structPkg ? getTotalContentCount(structPkg) : 0;
 
-  const { completeContent } = useProgress(currentUser?.userId, courseId);
+  const { completeContent, getModuleStatus } = useProgress(currentUser?.userId, courseId);
   const completedRef = useRef(false);
+
+  // Redirect if parent module is locked
+  const parentMod = useMemo(() =>
+    modules.find(mod => getAllContentIds(mod).includes(contentId)),
+  [modules, contentId]);
+
+  const parentModStatus = useMemo(() => {
+    if (!currentUser || !parentMod || modules.length === 0) return null;
+    return getModuleStatus(parentMod, modules);
+  }, [currentUser, parentMod, modules, getModuleStatus]);
+
+  useEffect(() => {
+    if (parentModStatus === 'locked') {
+      navigate(`/course/${courseId}/modules`, { replace: true });
+    }
+  }, [parentModStatus, courseId, navigate]);
 
   // ── Playback state ─────────────────────────────────────────────────────────
   const totalSecs = item ? parseSecs(item.duration) : 60;
   const [elapsed, setElapsed] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const intervalRef = useRef(null);
+  const pdfScrollRef = useRef(null);
 
-  // PDF state
   const PDF_TOTAL_PAGES = 8;
-  const [pdfPage, setPdfPage] = useState(1);
 
   // Reset on content change
   useEffect(() => {
     setElapsed(0);
     setIsPlaying(false);
     completedRef.current = false;
-    setPdfPage(1);
     clearInterval(intervalRef.current);
   }, [contentId, courseId]);
 
@@ -251,14 +242,22 @@ export default function ContentPlayerScreen() {
     if (item?.type === 'image') handleComplete();
   }, [item?.type, handleComplete]);
 
-  // PDF page navigation
-  const handlePdfNext = () => {
-    if (pdfPage < PDF_TOTAL_PAGES) {
-      setPdfPage(p => p + 1);
-    } else {
-      handleComplete();
-    }
-  };
+  // PDF scroll-to-complete
+  useEffect(() => {
+    if (item?.type !== 'pdf') return;
+    const container = pdfScrollRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      if (scrollTop + clientHeight >= scrollHeight - 50 && !completedRef.current) {
+        completedRef.current = true;
+        completeContent(contentId, totalContent);
+        showToast('✓ PDF complete', 'success');
+      }
+    };
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [item?.type, completeContent, contentId, totalContent, showToast]);
 
   const handleBack = () => {
     const from = location.state?.from;
@@ -305,37 +304,63 @@ export default function ContentPlayerScreen() {
         </div>
       </div>
 
-      {/* ── Player area (fixed 220px) ── */}
-      <div style={{ height: 220, flexShrink: 0 }}>
-        {item.type === 'video' && (
-          <VideoPlayer item={item} pkg={pkg} isPlaying={isPlaying} elapsed={elapsed} totalSecs={totalSecs}
-            onPlayPause={() => setIsPlaying(p => !p)}
-            onRewind={() => setElapsed(e => Math.max(0, e - 10))}
-            onForward={() => setElapsed(e => Math.min(totalSecs, e + 10))}
-            onScrub={setElapsed} />
-        )}
-        {item.type === 'audio' && (
-          <AudioPlayer item={item} pkg={pkg} isPlaying={isPlaying} elapsed={elapsed} totalSecs={totalSecs}
-            onPlayPause={() => setIsPlaying(p => !p)}
-            onRewind={() => setElapsed(e => Math.max(0, e - 10))}
-            onForward={() => setElapsed(e => Math.min(totalSecs, e + 10))}
-            onScrub={setElapsed} />
-        )}
-        {item.type === 'pdf' && (
-          <PdfPlayer item={item} page={pdfPage} totalPages={PDF_TOTAL_PAGES}
-            onNext={handlePdfNext}
-            onPrev={() => setPdfPage(p => Math.max(1, p - 1))}
-            onDownload={() => showToast('Download started ↓')} />
-        )}
-        {item.type === 'image' && (
-          <ImagePlayer item={item} pkg={pkg} onShare={() => showToast('Shared!')} />
-        )}
-      </div>
+      {item.type === 'pdf' ? (
+        /* ── PDF: full scrollable page view ── */
+        <div ref={pdfScrollRef} className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', paddingBottom: 40 }}>
+          {/* Download row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            {item.size && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.size}</span>}
+            <button onClick={() => showToast('Download started ↓')} style={{ color: 'var(--text-muted)', padding: 4 }}>
+              <HiArrowDownTray size={18} />
+            </button>
+          </div>
 
-      {/* ── Content info (scrollable) ── */}
-      <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
-        <ContentInfo item={item} />
-      </div>
+          {/* All pages */}
+          {Array.from({ length: PDF_TOTAL_PAGES }).map((_, i) => (
+            <div key={i} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Page {i + 1}
+              </div>
+              {lineWidths[i % 3].map((w, j) => (
+                <div key={j} style={{ height: 10, width: w, background: 'var(--border)', borderRadius: 4, marginBottom: 10, opacity: j === 0 ? 0.9 : 0.6 }} />
+              ))}
+            </div>
+          ))}
+
+          {/* Description */}
+          {item.description && (
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.65, marginTop: 8 }}>{item.description}</p>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* ── Player area (fixed 220px) ── */}
+          <div style={{ height: 220, flexShrink: 0 }}>
+            {item.type === 'video' && (
+              <VideoPlayer item={item} pkg={pkg} isPlaying={isPlaying} elapsed={elapsed} totalSecs={totalSecs}
+                onPlayPause={() => setIsPlaying(p => !p)}
+                onRewind={() => setElapsed(e => Math.max(0, e - 10))}
+                onForward={() => setElapsed(e => Math.min(totalSecs, e + 10))}
+                onScrub={setElapsed} />
+            )}
+            {item.type === 'audio' && (
+              <AudioPlayer item={item} pkg={pkg} isPlaying={isPlaying} elapsed={elapsed} totalSecs={totalSecs}
+                onPlayPause={() => setIsPlaying(p => !p)}
+                onRewind={() => setElapsed(e => Math.max(0, e - 10))}
+                onForward={() => setElapsed(e => Math.min(totalSecs, e + 10))}
+                onScrub={setElapsed} />
+            )}
+            {item.type === 'image' && (
+              <ImagePlayer item={item} pkg={pkg} onShare={() => showToast('Shared!')} />
+            )}
+          </div>
+
+          {/* ── Content info (scrollable) ── */}
+          <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
+            <ContentInfo item={item} />
+          </div>
+        </>
+      )}
     </motion.div>
   );
 }

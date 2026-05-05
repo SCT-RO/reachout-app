@@ -10,8 +10,6 @@ import BottomNav from '../components/BottomNav';
 import Chatbot from '../components/Chatbot';
 import { HiMagnifyingGlass, HiShoppingCart } from '../components/Icons';
 
-const CATEGORIES = ['All', 'Technology', 'Business', 'Design', 'Leadership', 'Marketing'];
-
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return 'Good morning';
@@ -24,14 +22,12 @@ export default function HomeScreen() {
   const { cartItems } = useCart();
   const navigate = useNavigate();
   const { courses, isLoading, error, refetch } = useCourses();
-  const [activeCat, setActiveCat] = useState('All');
   const [searchQ, setSearchQ] = useState('');
 
   const firstName = currentUser?.name?.split(' ')[0] || 'there';
   const featured = courses.find(c => c.featured);
 
   const filteredCourses = courses.filter(c =>
-    (activeCat === 'All' || c.category === activeCat) &&
     c.title.toLowerCase().includes(searchQ.toLowerCase())
   );
 
@@ -121,22 +117,8 @@ export default function HomeScreen() {
           </AnimatePresence>
         </div>
 
-        {/* Category pills */}
-        <div className="hide-scrollbar" role="group" aria-label="Filter by category" style={{ display: 'flex', gap: 8, marginBottom: 20, overflowX: 'auto', margin: '0 -20px 20px', padding: '0 20px' }}>
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveCat(cat)}
-              aria-pressed={activeCat === cat}
-              style={{ padding: '7px 16px', borderRadius: 20, background: activeCat === cat ? 'var(--primary)' : 'var(--bg-surface)', color: activeCat === cat ? '#fff' : 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s', border: activeCat === cat ? '1px solid transparent' : '1px solid var(--border)', flexShrink: 0, minHeight: 44, fontFamily: 'Inter,sans-serif' }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
         {/* Featured banner */}
-        {!searchQ && activeCat === 'All' && featured && !isLoading && (
+        {!searchQ && featured && !isLoading && (
           <motion.button
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
             aria-label={`Featured: ${featured.title} by ${featured.instructor}. ${featured.price === 0 ? 'Free' : `₹${featured.price.toLocaleString()}`}`}

@@ -14,7 +14,7 @@ export async function fetchCourses() {
     }
     return data.courses;
   } catch (err) {
-    console.warn('[ReachOut] Airtable fetch failed, using static data:', err.message);
+    console.warn('[ReachOut] Airtable fetch failed, using static data:', (err as Error).message);
     return staticCourses;
   }
 }

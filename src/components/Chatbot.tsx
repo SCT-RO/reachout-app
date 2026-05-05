@@ -1,25 +1,45 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Course, LessonProgress } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { useCourses } from '../hooks/useCourses';
 import { getPurchased, getProgress } from '../utils/storage';
+
+interface ChatMessage {
+  id: number;
+  text: string;
+  isBot: boolean;
+  chips?: string[];
+}
+
+interface ChatReply {
+  text: string;
+  chips: string[];
+}
+
+interface ChatContext {
+  name: string;
+  courses: Course[];
+  purchased: Course[];
+  progressMap: Record<string, LessonProgress>;
+}
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const IcSparkles  = ({ s = 22 }) => <svg width={s} height={s} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423L16.5 15.75l.394 1.183a2.25 2.25 0 001.423 1.423L19.5 18.75l-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>;
 const IcArrow     = () => <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15m0 0l6.75 6.75M4.5 12l6.75-6.75"/></svg>;
 const IcMic       = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/></svg>;
 const IcSend      = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>;
-const IcSound     = ({ on }) => on
+const IcSound     = ({ on }: { on: boolean }) => on
   ? <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"/></svg>
   : <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"/></svg>;
 
 // ─── Text renderer — supports **bold** and newlines ───────────────────────────
-function RichText({ text }) {
+function RichText({ text }: { text: string }) {
   return (
     <div style={{ lineHeight: 1.55 }}>
-      {text.split('\n').map((line, i) => (
+      {text.split('\n').map((line: string, i: number) => (
         <div key={i} style={{ marginBottom: line === '' ? 6 : 0 }}>
-          {line.split(/(\*\*[^*]+\*\*)/g).map((chunk, j) =>
+          {line.split(/(\*\*[^*]+\*\*)/g).map((chunk: string, j: number) =>
             chunk.startsWith('**') && chunk.endsWith('**')
               ? <strong key={j}>{chunk.slice(2, -2)}</strong>
               : chunk
@@ -31,9 +51,9 @@ function RichText({ text }) {
 }
 
 // ─── Smart reply engine ───────────────────────────────────────────────────────
-function getReply(input, { name, courses, purchased, progressMap }) {
+function getReply(input: string, { name, courses, purchased, progressMap }: ChatContext): ChatReply {
   const m = input.toLowerCase().trim();
-  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
   // Greet
   if (/^(hi|hello|hey|good\s*(morning|evening|afternoon)|sup|yo)\b/.test(m))
@@ -114,8 +134,9 @@ function getReply(input, { name, courses, purchased, progressMap }) {
     c.title.toLowerCase().split(' ').some(w => w.length > 3 && m.includes(w.toLowerCase()))
   );
   if (hit) {
-    const enrolled = purchased.find(p => p.id === hit.id);
-    const pct = progressMap[hit.notionId || hit.id]?.percentComplete ?? 0;
+    const enrolled = purchased.find((p: Course) => p.id === hit.id);
+    const hitWithNotion = hit as Course & { notionId?: string };
+    const pct = progressMap[hitWithNotion.notionId || String(hit.id)]?.percentComplete ?? 0;
     const disc = hit.originalPrice ? Math.round((1 - hit.price / hit.originalPrice) * 100) : 0;
     return {
       text: `Here's everything about **${hit.title}**! ✨\n\n📚 **${hit.lessons} lessons** · ⏱ **${hit.duration}** · ⭐ **${hit.rating}/5** · 👥 **${hit.enrolled?.toLocaleString()} learners**\n\n${hit.description}\n\n💰 **Price:** ${hit.price === 0 ? 'Completely Free! 🎉' : `₹${hit.price.toLocaleString()}${disc > 0 ? ` (${disc}% off original price)` : ''}`}\n\n${enrolled ? `🎓 You're enrolled! You've completed **${pct}%** of this course.` : 'Ready to join thousands of learners?'}`,
@@ -132,8 +153,9 @@ function getReply(input, { name, courses, purchased, progressMap }) {
         text: `You haven't enrolled in any courses yet, ${name} — but that's easy to fix! 😊\n\nExplore our catalog and find something that excites you. Your learning journey is just one tap away.`,
         chips: ['Show me courses', "What's popular?", 'Free courses'],
       };
-    const lines = purchased.map(c => {
-      const pct = progressMap[c.notionId || c.id]?.percentComplete ?? 0;
+    const lines = purchased.map((c: Course) => {
+      const cWithNotion = c as Course & { notionId?: string };
+      const pct = progressMap[cWithNotion.notionId || String(c.id)]?.percentComplete ?? 0;
       const bar = '█'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
       return `• **${c.title}**\n  ${bar} ${pct}%`;
     });
@@ -250,7 +272,7 @@ function getReply(input, { name, courses, purchased, progressMap }) {
 }
 
 // ─── Welcome message builder ──────────────────────────────────────────────────
-function buildWelcome(name, purchased) {
+function buildWelcome(name: string, purchased: Course[]): ChatReply {
   if (purchased.length === 0)
     return {
       text: `Hi ${name}! 👋 I'm **ARIA**, your personal learning mentor at ReachOut.\n\nI'm here to help you discover courses, understand concepts, track your growth, and keep you motivated. Think of me as your always-available study buddy!\n\nWhat would you like to explore today?`,
@@ -263,9 +285,12 @@ function buildWelcome(name, purchased) {
 }
 
 // ─── Voice helpers ────────────────────────────────────────────────────────────
-const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+type SpeechRecognitionCtor = typeof SpeechRecognition;
+const SRCtor: SpeechRecognitionCtor | undefined = typeof window !== 'undefined'
+  ? (window.SpeechRecognition || (window as Window & { webkitSpeechRecognition?: SpeechRecognitionCtor }).webkitSpeechRecognition)
+  : undefined;
 
-function speak(text) {
+function speak(text: string): void {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const plain = text.replace(/\*\*/g, '').replace(/[🎉🎓📚⭐💡🎯🔍🧠💪✨👋😊📊🏆🐍💻🎨📣💰💳📈🔁⏱🌙🏃❓✅🤝🗣🆓]/gu, '');
@@ -284,9 +309,11 @@ export default function Chatbot() {
   const { courses } = useCourses();
   const name = currentUser?.name?.split(' ')[0] || 'there';
 
-  const purchased = currentUser ? getPurchased(currentUser.userId) : [];
-  const progressMap = purchased.reduce((acc, c) => {
-    acc[c.notionId || c.id] = getProgress(currentUser?.userId, c.notionId || c.id);
+  const purchased: Course[] = currentUser ? getPurchased(currentUser.userId) : [];
+  const progressMap: Record<string, LessonProgress> = purchased.reduce((acc: Record<string, LessonProgress>, c: Course) => {
+    const cWithNotion = c as Course & { notionId?: string };
+    const key = cWithNotion.notionId || String(c.id);
+    acc[key] = getProgress(currentUser?.userId || '', key);
     return acc;
   }, {});
 
@@ -297,46 +324,46 @@ export default function Chatbot() {
   );
 
   const [isOpen, setIsOpen]       = useState(false);
-  const [messages, setMessages]   = useState([]);
+  const [messages, setMessages]   = useState<ChatMessage[]>([]);
   const [input, setInput]         = useState('');
   const [isTyping, setIsTyping]   = useState(false);
   const [voiceOn, setVoiceOn]     = useState(false);
   const [recording, setRecording] = useState(false);
 
-  const endRef   = useRef(null);
-  const inputRef = useRef(null);
-  const srRef    = useRef(null);
+  const endRef   = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const srRef    = useRef<SpeechRecognition | null>(null);
 
   // Auto-scroll
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isTyping]);
 
-  const pushReply = useCallback((reply) => {
+  const pushReply = useCallback((reply: ChatReply) => {
     setIsTyping(true);
     const delay = Math.min(600 + reply.text.length * 8, 2200);
     setTimeout(() => {
       setIsTyping(false);
-      const msg = { id: Date.now(), ...reply, isBot: true };
-      setMessages(p => [...p, msg]);
+      const msg: ChatMessage = { id: Date.now(), ...reply, isBot: true };
+      setMessages((p: ChatMessage[]) => [...p, msg]);
       if (voiceOn) speak(reply.text);
     }, delay);
   }, [voiceOn]);
 
-  const handleSend = useCallback((text) => {
+  const handleSend = useCallback((text?: string) => {
     const msg = (text || input).trim();
     if (!msg) return;
-    setMessages(p => [...p, { id: Date.now(), text: msg, isBot: false }]);
+    setMessages((p: ChatMessage[]) => [...p, { id: Date.now(), text: msg, isBot: false }]);
     setInput('');
     pushReply(getReply(msg, context));
   }, [input, context, pushReply]);
 
   // Voice input
   const startRecording = () => {
-    if (!SR) { alert('Voice input is not supported in this browser.'); return; }
-    const sr = new SR();
+    if (!SRCtor) { alert('Voice input is not supported in this browser.'); return; }
+    const sr = new SRCtor();
     srRef.current = sr;
     sr.lang = 'en-IN';
     sr.interimResults = false;
-    sr.onresult = e => {
+    sr.onresult = (e: SpeechRecognitionEvent) => {
       const transcript = e.results[0][0].transcript;
       setInput(transcript);
       setRecording(false);
@@ -357,7 +384,7 @@ export default function Chatbot() {
   const handleOpen = () => {
     setIsOpen(true);
     window.speechSynthesis?.cancel();
-    setMessages(prev => {
+    setMessages((prev: ChatMessage[]) => {
       if (prev.length > 0) return prev;
       const welcome = buildWelcome(name, purchased);
       return [{ id: 0, ...welcome, isBot: true }];

@@ -7,7 +7,7 @@ import { useApp } from '../context/AppContext';
 import { useCourses } from '../hooks/useCourses';
 import { getPurchased } from '../utils/storage';
 import { findCoursePackage } from '../data/courses';
-import { HiArrowLeft, HiStar, HiCheck, HiShoppingCart, HiLockClosed } from '../components/Icons';
+import { HiArrowLeft, HiCheck, HiShoppingCart, HiLockClosed } from '../components/Icons';
 
 const IconPhone = () => (
   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -180,11 +180,7 @@ export default function CourseDetailScreen() {
         <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, letterSpacing: '-0.02em' }}>{course.title}</h1>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, color: 'var(--text-muted)', fontSize: 13 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <HiStar filled /><span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{course.rating}</span>
-          </div>
-          <span>•</span><span>{course.enrolled.toLocaleString()} enrolled</span>
-          <span>•</span><span>{course.duration}</span>
+          <span>{course.duration}</span>
           <span>•</span><span>{course.lessons} lessons</span>
         </div>
 

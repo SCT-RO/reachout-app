@@ -391,12 +391,12 @@ export const moduleAssignments = [
   },
 ];
 
-export function getModuleAssignment(courseId, moduleId) {
+export function getModuleAssignment(courseId: string, moduleId: string) {
   return moduleAssignments.find(a => a.courseId === courseId && a.moduleId === moduleId) || null;
 }
 
 // Lookup by module order (1-based) — used when moduleId is an Airtable record ID
-export function getModuleAssignmentByOrder(pkgId, moduleOrder) {
+export function getModuleAssignmentByOrder(pkgId: string, moduleOrder: number) {
   const pkgAssignments = moduleAssignments.filter(a => a.courseId === pkgId);
   return pkgAssignments[moduleOrder - 1] || null;
 }
