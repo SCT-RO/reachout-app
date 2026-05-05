@@ -151,8 +151,9 @@ export async function buildCourseStructure(courseName: string): Promise<CourseMo
       type: hasSubmodules ? 'submodules' : 'content',
       submodules: hasSubmodules ? modSubmodules : [],
       content: hasSubmodules ? [] : directContent,
-      quiz: buildQuiz(quizzes, mod.title, null),
-      assignment: buildAssignment(assignments, mod.title, null),
+      // Modules with submodules have no quiz/assignment — those live on the submodules
+      quiz: hasSubmodules ? null : buildQuiz(quizzes, mod.title, null),
+      assignment: hasSubmodules ? null : buildAssignment(assignments, mod.title, null),
     } as CourseModule;
   });
 }

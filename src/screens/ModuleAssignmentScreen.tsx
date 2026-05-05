@@ -15,7 +15,7 @@ function findAssignmentInModules(modules, moduleId, submoduleId) {
     if (mod.id === moduleId) {
       if (submoduleId) {
         const sub = mod.submodules?.find(s => s.id === submoduleId);
-        return sub?.assignment ?? null;
+        if (sub?.assignment) return sub.assignment;
       }
       return mod.assignment ?? null;
     }
@@ -76,9 +76,12 @@ export default function ModuleAssignmentScreen() {
     return getModuleAssignmentByOrder(pkg.id, mod.order);
   }, [modules, moduleId, submoduleId, pkg, mod]);
 
+  // Use submoduleId as storage key when assignment belongs to a submodule
+  const storageId = submoduleId ?? moduleId;
+
   const existingData = useMemo(() =>
-    userId ? getModuleAssignmentData(userId, courseId, moduleId) : null,
-  [userId, courseId, moduleId]);
+    userId ? getModuleAssignmentData(userId, courseId, storageId) : null,
+  [userId, courseId, storageId]);
 
   const { isModuleUnlocked } = useProgress(userId, courseId);
   const nextMod = modules.find(m => m.order === (mod?.order ?? 0) + 1);
@@ -118,7 +121,7 @@ export default function ModuleAssignmentScreen() {
         submitted: true,
         latestSubmission: sub,
       };
-      if (userId) saveModuleAssignmentData(userId, courseId, moduleId, newData);
+      if (userId) saveModuleAssignmentData(userId, courseId, storageId, newData);
       setSubmissionRecord(sub);
       setSubmitting(false);
       setSubmitted(true);

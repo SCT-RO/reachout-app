@@ -6,7 +6,6 @@ import { useProgress } from '../hooks/useProgress';
 import { useCourses } from '../hooks/useCourses';
 import { useCourseStructure } from '../hooks/useCourseStructure';
 import { getPurchased, getModuleCompletionStatus } from '../utils/storage';
-import { findCoursePackage } from '../data/courses';
 import PaywallSheet from '../components/PaywallSheet';
 import {
   HiArrowLeft, HiLockClosed, HiCheck, HiPlay,
@@ -44,20 +43,21 @@ function ChecklistRow({ icon: Icon, label, detail, done, actionLabel, onAction }
 
 import type { CourseModule, ContentItem, ModuleCompletionStatus } from '../types';
 
-function ModuleCompletionChecklist({ courseId, moduleId, submoduleId, completionStatus, allModContent, completedInMod, nextMod, navigate, mod }: {
+function ModuleCompletionChecklist({ courseId, moduleId, submoduleId, completionStatus, subContent, completedInSub, nextSub, nextMod, navigate, sub }: {
   courseId: string;
   moduleId: string;
   submoduleId: string;
   completionStatus: ModuleCompletionStatus;
-  allModContent: ContentItem[];
-  completedInMod: string[];
+  subContent: ContentItem[];
+  completedInSub: string[];
+  nextSub: import('../types').Submodule | undefined;
   nextMod: CourseModule | undefined;
-  navigate: (path: string) => void;
-  mod: CourseModule;
+  navigate: (path: string, opts?: object) => void;
+  sub: import('../types').Submodule;
 }) {
   const { contentComplete, quizSubmitted, assignmentSubmitted } = completionStatus;
-  const hasQuiz = !!mod?.quiz;
-  const hasAssignment = !!mod?.assignment;
+  const hasQuiz = !!sub?.quiz;
+  const hasAssignment = !!sub?.assignment;
   const stepsNeeded = 1 + (hasQuiz ? 1 : 0) + (hasAssignment ? 1 : 0);
   const fullyComplete = contentComplete && (!hasQuiz || quizSubmitted) && (!hasAssignment || assignmentSubmitted);
 
@@ -70,31 +70,39 @@ function ModuleCompletionChecklist({ courseId, moduleId, submoduleId, completion
       {fullyComplete ? (
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 20, marginBottom: 6 }}>🎉</div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#22C55E', marginBottom: 4 }}>Module Complete!</div>
-          {nextMod && (
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#22C55E', marginBottom: 4 }}>Section Complete!</div>
+          {nextSub ? (
             <>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>Next: {nextMod.title}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>Next: {nextSub.title}</div>
+              <motion.button whileTap={{ scale: 0.97 }} className="btn-primary" style={{ width: '100%' }}
+                onClick={() => navigate(`/course/${courseId}/module/${moduleId}/submodule/${nextSub.id}`)}>
+                Continue to Next Section →
+              </motion.button>
+            </>
+          ) : nextMod ? (
+            <>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>Next module: {nextMod.title}</div>
               <motion.button whileTap={{ scale: 0.97 }} className="btn-primary" style={{ width: '100%' }}
                 onClick={() => navigate(`/course/${courseId}/module/${nextMod.id}`)}>
                 Continue to Next Module →
               </motion.button>
             </>
-          )}
+          ) : null}
         </div>
       ) : (
         <>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Complete this module</div>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Complete this section</div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
-            Finish {stepsNeeded === 1 ? 'all lessons' : `all ${stepsNeeded} steps`} to unlock the next module
+            Finish {stepsNeeded === 1 ? 'all lessons' : `all ${stepsNeeded} steps`} to continue
           </div>
-          <ChecklistRow icon={HiBookOpen} label="Watch / Read all lessons" detail={`${completedInMod.length}/${allModContent.length} completed`} done={contentComplete} />
+          <ChecklistRow icon={HiBookOpen} label="Watch / Read all lessons" detail={`${completedInSub.length}/${subContent.length} completed`} done={contentComplete} />
           {hasQuiz && (
-            <ChecklistRow icon={HiClipboardList} label="Take the module quiz" detail={quizSubmitted ? 'Attempted' : 'Not started'} done={quizSubmitted}
-              actionLabel={quizSubmitted ? 'Retake Quiz' : 'Take Quiz'} onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`, { state: { moduleId, submoduleId } })} />
+            <ChecklistRow icon={HiClipboardList} label="Take the quiz" detail={quizSubmitted ? 'Attempted' : 'Not started'} done={quizSubmitted}
+              actionLabel={quizSubmitted ? 'View Results' : 'Take Quiz'} onAction={() => navigate(`/course/${courseId}/module/${moduleId}/quiz`, { state: { moduleId, submoduleId } })} />
           )}
           {hasAssignment && (
             <ChecklistRow icon={HiPaperClip} label="Submit your assignment" detail={assignmentSubmitted ? 'Submitted' : 'Not submitted'} done={assignmentSubmitted}
-              actionLabel="View Assignment" onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`, { state: { moduleId, submoduleId } })} />
+              actionLabel={assignmentSubmitted ? 'View Submission' : 'View Assignment'} onAction={() => navigate(`/course/${courseId}/module/${moduleId}/assignment`, { state: { moduleId, submoduleId } })} />
           )}
         </>
       )}
@@ -151,20 +159,22 @@ export default function SubmoduleScreen() {
     }
   }, [moduleStatus, courseId, navigate]);
 
-  const allModContent = useMemo(() => {
-    if (!mod) return [];
-    return (mod.submodules || []).flatMap(s => s.content || []);
-  }, [mod]);
-
   const progressData = getCourseProgress();
   const completedAllContent = progressData.completedContent || [];
-  const completedInMod = completedAllContent.filter(id => allModContent.some(c => c.id === id));
+
+  // Per-submodule content and completion
+  const subContent = useMemo(() => sub?.content || [], [sub]);
+  const completedInSub = completedAllContent.filter(id => subContent.some(c => c.id === id));
 
   const completionStatus = currentUser ? getModuleCompletionStatus(
-    currentUser.userId, courseId ?? '', moduleId ?? '', completedInMod, allModContent.length
+    currentUser.userId, courseId ?? '', submoduleId ?? '', completedInSub, subContent.length
   ) : { contentComplete: false, quizSubmitted: false, assignmentSubmitted: false, fullyComplete: false };
 
-  const nextMod = modules.find(m => m.order === (mod?.order ?? 0) + 1);
+  // Next submodule in same module, or next module if last submodule
+  const submodules = mod?.submodules || [];
+  const currentSubIdx = submodules.findIndex(s => s.id === submoduleId);
+  const nextSub = currentSubIdx >= 0 && currentSubIdx < submodules.length - 1 ? submodules[currentSubIdx + 1] : undefined;
+  const nextMod = !nextSub ? modules.find(m => m.order === (mod?.order ?? 0) + 1) : undefined;
 
   if (isLoading && !course) {
     return (
@@ -264,11 +274,12 @@ export default function SubmoduleScreen() {
             moduleId={moduleId}
             submoduleId={submoduleId}
             completionStatus={completionStatus}
-            allModContent={allModContent}
-            completedInMod={completedInMod}
+            subContent={subContent}
+            completedInSub={completedInSub}
+            nextSub={nextSub}
             nextMod={nextMod}
             navigate={navigate}
-            mod={mod}
+            sub={sub}
           />
         )}
       </div>

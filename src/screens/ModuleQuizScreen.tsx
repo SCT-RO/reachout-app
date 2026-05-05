@@ -12,9 +12,10 @@ import { HiArrowLeft, HiXCircle, HiCheckCircle } from '../components/Icons';
 function findQuizInModules(modules, moduleId, submoduleId) {
   for (const mod of modules) {
     if (mod.id === moduleId) {
+      // Check submodule-level quiz first, then fall back to module-level
       if (submoduleId) {
         const sub = mod.submodules?.find(s => s.id === submoduleId);
-        return sub?.quiz ?? null;
+        if (sub?.quiz) return sub.quiz;
       }
       return mod.quiz ?? null;
     }
@@ -86,24 +87,33 @@ export default function ModuleQuizScreen() {
   }, [modules, moduleId, submoduleId, pkg, mod]);
 
   const userId = currentUser?.userId;
+  // Use submoduleId as storage key when quiz belongs to a submodule
+  const storageId = submoduleId ?? moduleId;
+
+  const existingResults = useMemo(() =>
+    userId ? getQuizResults(userId, courseId, storageId) : null,
+  [userId, courseId, storageId]);
 
   const [questions, setQuestions] = useState([]);
   useEffect(() => {
     if (rawQuiz) setQuestions(buildQuestions(rawQuiz.questions));
   }, [rawQuiz]);
 
-  const [screen, setScreen] = useState('quiz'); // 'quiz' | 'results'
+  // If already submitted, open directly on the results of the last attempt
+  const [screen, setScreen] = useState(() =>
+    existingResults?.submitted ? 'results' : 'quiz'
+  );
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selected, setSelected] = useState(null);
   const [checked, setChecked] = useState(false);
-  const [userAnswers, setUserAnswers] = useState([]); // [{questionId, selected, correct}]
-
-  const existingResults = useMemo(() =>
-    userId ? getQuizResults(userId, courseId, moduleId) : null,
-  [userId, courseId, moduleId]);
+  const [userAnswers, setUserAnswers] = useState([]);
 
   // ── Results state ───────────────────────────────────────────────────────────
-  const [results, setResults] = useState(null);
+  const [results, setResults] = useState(() => {
+    if (!existingResults?.submitted || !existingResults.attempts?.length) return null;
+    const attempt = existingResults.attempts[existingResults.attempts.length - 1];
+    return { attempt, allResults: existingResults };
+  });
 
   const currentQ = questions[currentIdx];
   const total = questions.length;
@@ -135,12 +145,12 @@ export default function ModuleQuizScreen() {
         completedAt: new Date().toISOString(),
       };
 
-      const prev = userId ? getQuizResults(userId, courseId, moduleId) : null;
+      const prev = userId ? getQuizResults(userId, courseId, storageId) : null;
       const attempts = prev?.attempts ? [...prev.attempts, attempt] : [attempt];
       const bestScore = Math.max(...attempts.map(a => a.score));
       const newResults = { attempts, bestScore, submitted: true };
 
-      if (userId) saveQuizResults(userId, courseId, moduleId, newResults);
+      if (userId) saveQuizResults(userId, courseId, storageId, newResults);
 
       setResults({ attempt, allResults: newResults });
       setScreen('results');
@@ -157,7 +167,7 @@ export default function ModuleQuizScreen() {
     setScreen('quiz');
   };
 
-  if (isLoading && !course || structLoading && !mod) {
+  if ((isLoading && !course) || (structLoading && modules.length === 0)) {
     return (
       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite' }} />
@@ -165,15 +175,12 @@ export default function ModuleQuizScreen() {
     );
   }
 
-  if (!rawQuiz) {
+  if (!rawQuiz || rawQuiz.questions.length === 0) {
     return (
-      <motion.div
-        initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.22 }}
-        style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)', gap: 16, padding: 24 }}
-      >
-        <div style={{ fontSize: 16, fontWeight: 700, textAlign: 'center' }}>Quiz not available for this module.</div>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)', gap: 16, padding: 24 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, textAlign: 'center', color: 'var(--text-primary)' }}>Quiz not available for this module.</div>
         <button className="btn-outline" onClick={() => navigate(-1)}>← Back</button>
-      </motion.div>
+      </div>
     );
   }
 
