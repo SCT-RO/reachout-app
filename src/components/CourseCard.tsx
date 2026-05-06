@@ -17,14 +17,14 @@ export default function CourseCard({ course, priority = false, onClick }: { cour
 
   return (
     <motion.button
-      whileHover={{ y: -3, boxShadow: '0 10px 28px rgba(79,70,229,0.18)' }}
+      whileTap={{ scale: 0.98 }}
       className="glass-card"
       aria-label={ariaLabel}
-      style={{ borderRadius: 16, overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column', textAlign: 'left', width: '100%', minHeight: 'unset', padding: 0, color: 'var(--text-primary)' }}
+      style={{ borderRadius: 16, overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'row', textAlign: 'left', width: '100%', minHeight: 'unset', padding: 0, color: 'var(--text-primary)' }}
       onClick={() => onClick ? onClick() : navigate(`/course/${course.id}`)}
     >
-      <div style={{ aspectRatio: '16/9', width: '100%', position: 'relative', overflow: 'hidden', background: 'var(--border)' }}>
-        {/* Skeleton shown until image loads */}
+      {/* Thumbnail */}
+      <div style={{ width: 110, flexShrink: 0, position: 'relative', overflow: 'hidden', background: 'var(--border)' }}>
         {!loaded && (
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, var(--border) 25%, var(--bg-surface) 50%, var(--border) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
         )}
@@ -39,15 +39,15 @@ export default function CourseCard({ course, priority = false, onClick }: { cour
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: loaded ? 1 : 0, transition: 'opacity 0.3s ease' }}
         />
         {course.price === 0 && (
-          <div aria-hidden="true" style={{ position: 'absolute', top: 8, right: 8, background: '#15803d', color: '#fff', fontSize: 9, fontWeight: 700, padding: '3px 7px', borderRadius: 6, letterSpacing: '0.05em' }}>FREE</div>
+          <div aria-hidden="true" style={{ position: 'absolute', top: 6, left: 6, background: '#15803d', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 5, letterSpacing: '0.05em' }}>FREE</div>
         )}
       </div>
-      <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div aria-hidden="true" style={{ fontSize: 9, color: 'var(--accent-text)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>{course.category}</div>
-        <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 34 }}>{course.title}</div>
-
-        <div style={{ marginTop: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
+      {/* Info */}
+      <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <div aria-hidden="true" style={{ fontSize: 9, color: 'var(--accent-text)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{course.category}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.35, marginBottom: 'auto', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{course.title}</div>
+        <div style={{ marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
             <HiStar filled />
             <span style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600 }}>{course.rating}</span>
             <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>({course.enrolled.toLocaleString()})</span>

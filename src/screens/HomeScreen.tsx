@@ -4,11 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
 import { useCourses } from '../hooks/useCourses';
-import { getPurchased } from '../utils/storage';
+import { getPurchased, getProgress } from '../utils/storage';
+import { findCoursePackage } from '../data/courses';
 import CourseCard from '../components/CourseCard';
 import BottomNav from '../components/BottomNav';
 import Chatbot from '../components/Chatbot';
-import { HiMagnifyingGlass, HiShoppingCart } from '../components/Icons';
+import { HiMagnifyingGlass, HiShoppingCart, HiPlayCircle, HiRectangleStack } from '../components/Icons';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -26,6 +27,13 @@ export default function HomeScreen() {
 
   const firstName = currentUser?.name?.split(' ')[0] || 'there';
   const featured = courses.find(c => c.featured);
+  const featuredIsPurchased = featured
+    ? getPurchased(currentUser?.userId || '').some(p => String(p.id) === String(featured.id))
+    : false;
+  const featuredProgress = featured
+    ? getProgress(currentUser?.userId || '', featured.id)
+    : { lessonsCompleted: [] as string[], percentComplete: 0, lastWatched: null };
+  const featuredModules = featured ? (findCoursePackage(featured.title)?.modules.length ?? 0) : 0;
 
   const filteredCourses = courses.filter(c =>
     c.title.toLowerCase().includes(searchQ.toLowerCase())
@@ -117,29 +125,80 @@ export default function HomeScreen() {
           </AnimatePresence>
         </div>
 
-        {/* Featured banner */}
-        {!searchQ && featured && !isLoading && (
-          <motion.button
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            aria-label={`Featured: ${featured.title} by ${featured.instructor}. ${featured.price === 0 ? 'Free' : `₹${featured.price.toLocaleString()}`}`}
-            style={{ height: 180, borderRadius: 20, overflow: 'hidden', position: 'relative', marginBottom: 20, cursor: 'pointer', width: '100%', border: 'none', padding: 0 }}
-            onClick={() => navigate(`/course/${featured.id}`)}
-          >
-            <img src={featured.image} alt="" role="presentation" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(24,24,27,0.97) 5%, rgba(24,24,27,0.1) 85%)' }} />
-            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, padding: 16, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', zIndex: 1 }}>
-              <div style={{ alignSelf: 'flex-start', background: 'rgba(79,70,229,0.9)', color: '#fff', padding: '3px 10px', borderRadius: 8, fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Featured</div>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 6, letterSpacing: '-0.02em' }}>{featured.title}</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{featured.instructor}</span>
-                  <span style={{ background: 'rgba(39,39,42,0.85)', color: '#fff', padding: '4px 8px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
-                    {featured.price === 0 ? 'Free' : `₹${featured.price.toLocaleString()}`}
-                  </span>
+        {/* Featured hero card */}
+        {!searchQ && (
+          isLoading
+            ? <div className="skeleton" style={{ height: 260, borderRadius: 20, marginBottom: 20 }} />
+            : featured && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                style={{ borderRadius: 20, overflow: 'hidden', position: 'relative', marginBottom: 20 }}
+              >
+                {/* Thumbnail */}
+                <div style={{ height: 260, position: 'relative' }}>
+                  <img src={featured.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.1) 100%)' }} />
                 </div>
-              </div>
-            </div>
-          </motion.button>
+                {/* Category pill */}
+                <div style={{ position: 'absolute', top: 14, left: 14, background: 'var(--primary)', color: 'white', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 8, textTransform: 'uppercase' }}>
+                  {featured.category}
+                </div>
+                {/* Bottom content */}
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16 }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: 'white', marginBottom: 4 }}>{featured.title}</div>
+                  {/* Stats row */}
+                  <div style={{ display: 'flex', gap: 16, marginBottom: 12, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.7)' }}>
+                      <HiPlayCircle size={14} />
+                      <span style={{ fontSize: 12 }}>{featured.lessons} Lessons</span>
+                    </div>
+                    <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.7)' }}>
+                      <HiRectangleStack size={14} />
+                      <span style={{ fontSize: 12 }}>{featuredModules} Modules</span>
+                    </div>
+                  </div>
+                  {/* Bottom row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {featuredIsPurchased ? (
+                      <div style={{ flex: 1, marginRight: 12 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>Your Progress</span>
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{featuredProgress.percentComplete}% Complete</span>
+                        </div>
+                        <div style={{ width: 160, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)' }}>
+                          <div style={{ height: '100%', borderRadius: 2, background: 'var(--primary)', width: `${featuredProgress.percentComplete}%` }} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <span style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>₹{featured.price.toLocaleString()}</span>
+                        {featured.originalPrice != null && (
+                          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', textDecoration: 'line-through', marginLeft: 6 }}>₹{featured.originalPrice.toLocaleString()}</span>
+                        )}
+                      </div>
+                    )}
+                    {featuredIsPurchased ? (
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => navigate(`/course/${featured.id}/modules`)}
+                        style={{ background: 'white', color: 'var(--primary)', padding: '11px 20px', borderRadius: 12, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'Inter,sans-serif', flexShrink: 0 }}
+                      >
+                        Continue →
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => navigate(`/course/${featured.id}`)}
+                        style={{ background: 'var(--primary)', color: 'white', padding: '11px 20px', borderRadius: 12, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'Inter,sans-serif', flexShrink: 0 }}
+                      >
+                        Enroll Now
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )
         )}
 
         {/* Error banner */}
@@ -162,12 +221,12 @@ export default function HomeScreen() {
         )}
 
         {/* Course grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {isLoading
             ? Array(4).fill(0).map((_, i) => (
-              <div key={i} aria-hidden="true" className="glass-card" style={{ borderRadius: 16, overflow: 'hidden' }}>
-                <div className="skeleton" style={{ height: 95, width: '100%' }} />
-                <div style={{ padding: 12 }}>
+              <div key={i} aria-hidden="true" className="glass-card" style={{ borderRadius: 16, overflow: 'hidden', display: 'flex', height: 96 }}>
+                <div className="skeleton" style={{ width: 110, flexShrink: 0 }} />
+                <div style={{ padding: 12, flex: 1 }}>
                   <div className="skeleton" style={{ height: 10, width: '40%', marginBottom: 8 }} />
                   <div className="skeleton" style={{ height: 13, width: '90%', marginBottom: 4 }} />
                   <div className="skeleton" style={{ height: 13, width: '60%' }} />
