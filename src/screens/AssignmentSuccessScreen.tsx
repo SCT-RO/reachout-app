@@ -67,7 +67,7 @@ export default function AssignmentSuccessScreen() {
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42 }}
         style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6, maxWidth: 280, marginBottom: 28 }}
       >
-        Your assignment has been received. Your instructor will review it and get back to you.
+        Your assignment has been received and is under review.
       </motion.p>
 
       {/* Assignment details card */}

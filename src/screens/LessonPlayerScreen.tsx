@@ -26,7 +26,7 @@ const INITIAL_COMMENTS = [
   { id: 1, name: 'Aarav K.', initials: 'AK', text: 'This explanation is crystal clear! The analogy really helped me understand the concept.', likes: 24, time: '2d ago' },
   { id: 2, name: 'Meera S.', initials: 'MS', text: "Can someone explain how this differs from the previous lesson? I'm getting a bit confused.", likes: 8, time: '1d ago' },
   { id: 3, name: 'Dev P.',   initials: 'DP', text: 'Pro tip: pause and take notes here. This section comes up in the quiz!', likes: 41, time: '5h ago' },
-  { id: 4, name: 'Riya T.',  initials: 'RT', text: "Amazing course overall. The instructor's pacing is perfect for beginners.", likes: 17, time: '2h ago' },
+  { id: 4, name: 'Riya T.',  initials: 'RT', text: "Amazing course overall. The pacing is perfect for beginners.", likes: 17, time: '2h ago' },
 ];
 
 function formatTime(secs) {

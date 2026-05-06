@@ -14,30 +14,18 @@ const QUOTES = [
   { text: "The more that you read, the more things you will know.", author: "Dr. Seuss" },
 ];
 
-const PARTICLE_COLORS = ['#4F46E5', '#A78BFA', '#22C55E', '#F59E0B', '#3B82F6', '#EC4899', '#8B5CF6', '#10B981', '#F97316', '#06B6D4', '#EF4444', '#84CC16'];
-
-// Pre-compute all random values at module load time (outside render)
-const PARTICLES = PARTICLE_COLORS.map((color, i) => ({
-  color,
-  delay: i * 0.28,
-  startX: -120 + i * 22,
-  duration: 3.5 + Math.random() * 2,
-  repeatDelay: Math.random() * 3,
-  size: 8 + Math.random() * 8,
+const CONFETTI = Array.from({ length: 40 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  delay: Math.random() * 2,
+  duration: 2.5 + Math.random() * 2,
+  size: 6 + Math.random() * 8,
+  rotation: Math.random() * 360,
+  color: ['#4F46E5', '#22C55E', '#F59E0B', '#EC4899', '#06B6D4', '#8B5CF6'][Math.floor(Math.random() * 6)],
+  shape: Math.random() > 0.5 ? 'rect' : 'circle',
 }));
 
 const QUOTE = QUOTES[Math.floor(Math.random() * QUOTES.length)];
-
-function Particle({ color, delay, startX, duration, repeatDelay, size }) {
-  return (
-    <motion.div
-      initial={{ y: 0, x: startX, opacity: 0.8, scale: 1 }}
-      animate={{ y: -320, opacity: 0, scale: 0.3 }}
-      transition={{ duration, delay, repeat: Infinity, repeatDelay, ease: 'easeOut' }}
-      style={{ position: 'absolute', bottom: 80, width: size, height: size, borderRadius: '50%', background: color, pointerEvents: 'none' }}
-    />
-  );
-}
 
 export default function PaymentSuccessScreen() {
   const navigate = useNavigate();
@@ -77,26 +65,56 @@ export default function PaymentSuccessScreen() {
         padding: '40px 24px 40px', position: 'relative', fontFamily: 'Inter,sans-serif',
       }}
     >
-      {/* Floating particles */}
-      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-        {PARTICLES.map((p, i) => <Particle key={i} {...p} />)}
+      {/* Confetti */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+        {CONFETTI.map(piece => (
+          <motion.div
+            key={piece.id}
+            animate={{ y: ['0vh', '110vh'], rotate: [piece.rotation, piece.rotation + 360], opacity: [1, 1, 0] }}
+            transition={{ duration: piece.duration, delay: piece.delay, ease: 'linear' }}
+            style={{
+              position: 'absolute',
+              top: -20,
+              left: `${piece.x}%`,
+              width: piece.size,
+              height: piece.shape === 'rect' ? piece.size * 1.4 : piece.size,
+              borderRadius: piece.shape === 'circle' ? '50%' : 2,
+              background: piece.color,
+              opacity: 0.85,
+            }}
+          />
+        ))}
       </div>
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-        {/* GIF */}
-        <motion.div
-          initial={{ scale: 0 }} animate={{ scale: 1 }}
-          transition={{ type: 'spring', damping: 14, stiffness: 180, delay: 0.1 }}
-          style={{ marginBottom: 24 }}
-        >
-          <img
-            src="https://media.giphy.com/media/g9582DNuQppxC/giphy.gif"
-            alt=""
-            style={{ width: 200, height: 200, borderRadius: '50%', border: '3px solid rgba(79,70,229,0.4)', objectFit: 'cover', display: 'block' }}
-            onError={e => { e.target.style.display = 'none'; }}
+        {/* Animated tick */}
+        <div style={{ position: 'relative', width: 100, height: 100, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <motion.div
+            animate={{ scale: [1, 1.4, 1.4], opacity: [0.6, 0, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
+            style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid var(--success)' }}
           />
-        </motion.div>
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', damping: 12, stiffness: 180, delay: 0.1 }}
+            style={{ width: 100, height: 100, borderRadius: '50%', background: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 0 rgba(34,197,94,0.4)' }}
+          >
+            <motion.svg
+              width="48" height="48" viewBox="0 0 24 24"
+              fill="none" stroke="white" strokeWidth="2.5"
+              strokeLinecap="round" strokeLinejoin="round"
+            >
+              <motion.path
+                d="M4.5 12.75l6 6 9-13.5"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.4, ease: 'easeOut' }}
+              />
+            </motion.svg>
+          </motion.div>
+        </div>
 
         {/* Emoji row */}
         <motion.div
@@ -139,7 +157,7 @@ export default function PaymentSuccessScreen() {
           <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {enrolledCourse?.title || 'Your Course'}
           </span>
-          <span style={{ fontSize: 10, fontWeight: 800, color: '#22C55E', background: 'rgba(34,197,94,0.12)', padding: '3px 8px', borderRadius: 6, flexShrink: 0 }}>
+          <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', background: '#16a34a', padding: '3px 8px', borderRadius: 6, flexShrink: 0 }}>
             ENROLLED
           </span>
         </motion.div>

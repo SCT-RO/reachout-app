@@ -153,8 +153,6 @@ export default function ModulesScreen() {
             <div style={{ position: 'absolute', bottom: 14, left: 16, right: 16 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 4, lineHeight: 1.2, textShadow: '0 1px 8px rgba(0,0,0,0.6)' }}>{course.title}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                <img src={pkg.instructorImg} alt="" style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.4)' }} />
-                <span style={{ color: 'rgba(255,255,255,0.8)' }}>{pkg.instructor}</span>
                 <span style={{ background: 'rgba(245,158,11,0.2)', color: '#fbbf24', padding: '2px 7px', borderRadius: 6, fontWeight: 700, fontSize: 11 }}>
                   ★ {pkg.rating}
                 </span>
