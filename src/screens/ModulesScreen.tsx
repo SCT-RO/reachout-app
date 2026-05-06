@@ -57,7 +57,15 @@ export default function ModulesScreen() {
   const course = courses.find(c => String(c.id) === courseId);
   const pkg = course ? findCoursePackage(course.title) : null;
   const { modules, isLoading: structLoading } = useCourseStructure(course?.title);
-  const isLoading = coursesLoading || (structLoading && modules.length === 0);
+  // Wait for both the course list AND module structure before rendering lock states.
+  // The original `structLoading && modules.length === 0` let a 1-render gap through
+  // where courseName just became defined but setIsLoading(true) hadn't fired yet,
+  // causing moduleStatuses to briefly return {} and all modules to fall back to 'unlocked'.
+  const isLoading = coursesLoading || structLoading;
+
+  if (import.meta.env.DEV) {
+    console.log('[ModulesScreen] courseId:', courseId, '| modules:', modules.length, '| structLoading:', structLoading, '| coursesLoading:', coursesLoading);
+  }
 
   const isPurchased = useMemo(() => {
     if (!currentUser) return false;

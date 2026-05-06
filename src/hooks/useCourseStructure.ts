@@ -4,6 +4,7 @@ import { buildCourseStructure } from '../utils/courseBuilder';
 import { findCoursePackage } from '../data/courses';
 
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const CACHE_VERSION = 'v3';
 
 function cacheKey(courseName: string): string {
   return `ro_structure_v2_${courseName}`;
@@ -13,15 +14,10 @@ function getCached(courseName: string): CourseModule[] | null {
   try {
     const raw = sessionStorage.getItem(cacheKey(courseName));
     if (!raw) return null;
-    const { data, ts } = JSON.parse(raw);
-    if (Date.now() - ts > CACHE_TTL) {
-      sessionStorage.removeItem(cacheKey(courseName));
-      return null;
-    }
-    // Bust cache if it pre-dates quiz/assignment fields
-    const hasQuizzes = data?.[0]?.quiz !== undefined
-      || data?.[0]?.submodules?.[0]?.quiz !== undefined;
-    if (!hasQuizzes) {
+    const { data, ts, version } = JSON.parse(raw);
+    const isExpired = Date.now() - ts > CACHE_TTL;
+    const isOldVersion = version !== CACHE_VERSION;
+    if (isExpired || isOldVersion) {
       sessionStorage.removeItem(cacheKey(courseName));
       return null;
     }
@@ -33,7 +29,7 @@ function getCached(courseName: string): CourseModule[] | null {
 
 function setCache(courseName: string, data: CourseModule[]): void {
   try {
-    sessionStorage.setItem(cacheKey(courseName), JSON.stringify({ data, ts: Date.now() }));
+    sessionStorage.setItem(cacheKey(courseName), JSON.stringify({ data, ts: Date.now(), version: CACHE_VERSION }));
   } catch {
     // sessionStorage full — skip caching
   }

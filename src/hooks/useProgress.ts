@@ -31,10 +31,26 @@ function checkAssignmentDone(userId: string, courseId: string, mod: CourseModule
 export function isModuleFullyComplete(userId: string, courseId: string, mod: CourseModule): boolean {
   if (!userId || !courseId || !mod) return false;
   const ids = getAllContentIds(mod);
-  if (ids.length === 0) return false;
+  // If module has no content (e.g. Airtable fetch failed and returned empty),
+  // treat it as passable so downstream modules don't stay permanently locked.
+  if (ids.length === 0) return checkQuizDone(userId, courseId, mod) && checkAssignmentDone(userId, courseId, mod);
   const { completedContent } = getContentProgress(userId, courseId);
   if (!ids.every(id => completedContent.includes(id))) return false;
   return checkQuizDone(userId, courseId, mod) && checkAssignmentDone(userId, courseId, mod);
+}
+
+// Standalone unlock check — safe to call outside the hook
+export function isModuleUnlocked(
+  userId: string,
+  courseId: string,
+  mod: CourseModule,
+  allModules: CourseModule[]
+): boolean {
+  if (!userId || !courseId || !mod) return false;
+  if (mod.order === 1) return true;
+  const prevMod = (allModules || []).find((m: CourseModule) => m.order === mod.order - 1);
+  if (!prevMod) return true;
+  return isModuleFullyComplete(userId, courseId, prevMod);
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
