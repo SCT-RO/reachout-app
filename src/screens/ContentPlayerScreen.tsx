@@ -23,6 +23,13 @@ function fmtTime(s) {
   const m = Math.floor(s / 60);
   return `${m}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
 }
+function toEmbedUrl(url: string): string {
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?.*v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0`;
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  return url;
+}
 
 const lineWidths = [
   ['100%', '85%', '92%', '70%', '88%', '60%'],
@@ -49,7 +56,22 @@ function Scrubber({ elapsed, total, onScrub, color = '#fff' }) {
 }
 
 // ─── COMPACT VIDEO PLAYER (fixed 220px) ───────────────────────────────────────
-function VideoPlayer({ item, pkg, isPlaying, elapsed, totalSecs, onPlayPause, onRewind, onForward, onScrub }) {
+function VideoPlayer({ item, pkg, isPlaying, elapsed, totalSecs, onPlayPause, onRewind, onForward, onScrub, onComplete }) {
+  if (item.url) {
+    const embed = toEmbedUrl(item.url);
+    if (embed !== item.url) {
+      return (
+        <div style={{ height: '100%', background: '#000' }}>
+          <iframe src={embed} title={item.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ width: '100%', height: '100%', border: 'none' }} onLoad={onComplete} />
+        </div>
+      );
+    }
+    return (
+      <div style={{ height: '100%', background: '#000' }}>
+        <video src={item.url} controls style={{ width: '100%', height: '100%', objectFit: 'contain' }} onEnded={onComplete} />
+      </div>
+    );
+  }
   const thumb = item.thumbnail || pkg.thumbnail;
   return (
     <div style={{ height: '100%', position: 'relative', background: '#000', overflow: 'hidden' }}>
@@ -82,7 +104,20 @@ function VideoPlayer({ item, pkg, isPlaying, elapsed, totalSecs, onPlayPause, on
 }
 
 // ─── COMPACT AUDIO PLAYER (fixed 220px) ───────────────────────────────────────
-function AudioPlayer({ item, pkg, isPlaying, elapsed, totalSecs, onPlayPause, onRewind, onForward, onScrub }) {
+function AudioPlayer({ item, pkg, isPlaying, elapsed, totalSecs, onPlayPause, onRewind, onForward, onScrub, onComplete }) {
+  if (item.url) {
+    return (
+      <div style={{ height: '100%', background: 'linear-gradient(160deg,#1e1b4b 0%,#0f172a 55%,#1a1a2e 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '12px 20px', gap: 12 }}>
+        <motion.div
+          animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
+          transition={isPlaying ? { repeat: Infinity, duration: 8, ease: 'linear' } : { duration: 0 }}
+          style={{ width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(139,92,246,0.5)', flexShrink: 0 }}>
+          <img src={pkg.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </motion.div>
+        <audio src={item.url} controls onEnded={onComplete} style={{ width: '100%' }} />
+      </div>
+    );
+  }
   return (
     <div style={{ height: '100%', background: 'linear-gradient(160deg,#1e1b4b 0%,#0f172a 55%,#1a1a2e 100%)', display: 'flex', alignItems: 'center', padding: '0 20px', gap: 16 }}>
       <motion.div
@@ -120,9 +155,10 @@ function AudioPlayer({ item, pkg, isPlaying, elapsed, totalSecs, onPlayPause, on
 
 // ─── COMPACT IMAGE VIEWER (fixed 220px) ───────────────────────────────────────
 function ImagePlayer({ item, pkg, onShare }) {
+  const src = item.url || item.thumbnail || pkg.thumbnail;
   return (
     <div style={{ height: '100%', background: '#000', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <img src={item.thumbnail || pkg.thumbnail} alt={item.title}
+      <img src={src} alt={item.title}
         style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
       <button onClick={onShare} style={{ position: 'absolute', bottom: 10, right: 12, color: 'rgba(255,255,255,0.6)', padding: 4 }}>
         <HiShare size={16} />
@@ -305,27 +341,31 @@ export default function ContentPlayerScreen() {
       </div>
 
       {item.type === 'pdf' ? (
-        /* ── PDF: full scrollable page view ── */
+        /* ── PDF: iframe if URL exists, else mock pages ── */
         <div ref={pdfScrollRef} className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', paddingBottom: 40 }}>
           {/* Download row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             {item.size && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.size}</span>}
-            <button onClick={() => showToast('Download started ↓')} style={{ color: 'var(--text-muted)', padding: 4 }}>
+            <button onClick={() => item.url ? window.open(item.url, '_blank') : showToast('Download started ↓')} style={{ color: 'var(--text-muted)', padding: 4 }}>
               <HiArrowDownTray size={18} />
             </button>
           </div>
 
-          {/* All pages */}
-          {Array.from({ length: PDF_TOTAL_PAGES }).map((_, i) => (
-            <div key={i} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Page {i + 1}
+          {item.url ? (
+            <iframe src={item.url} title={item.title} onLoad={handleComplete} style={{ width: '100%', height: 480, border: 'none', borderRadius: 12 }} />
+          ) : (
+            /* Mock pages */
+            Array.from({ length: PDF_TOTAL_PAGES }).map((_, i) => (
+              <div key={i} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Page {i + 1}
+                </div>
+                {lineWidths[i % 3].map((w, j) => (
+                  <div key={j} style={{ height: 10, width: w, background: 'var(--border)', borderRadius: 4, marginBottom: 10, opacity: j === 0 ? 0.9 : 0.6 }} />
+                ))}
               </div>
-              {lineWidths[i % 3].map((w, j) => (
-                <div key={j} style={{ height: 10, width: w, background: 'var(--border)', borderRadius: 4, marginBottom: 10, opacity: j === 0 ? 0.9 : 0.6 }} />
-              ))}
-            </div>
-          ))}
+            ))
+          )}
 
           {/* Description */}
           {item.description && (
@@ -341,14 +381,14 @@ export default function ContentPlayerScreen() {
                 onPlayPause={() => setIsPlaying(p => !p)}
                 onRewind={() => setElapsed(e => Math.max(0, e - 10))}
                 onForward={() => setElapsed(e => Math.min(totalSecs, e + 10))}
-                onScrub={setElapsed} />
+                onScrub={setElapsed} onComplete={handleComplete} />
             )}
             {item.type === 'audio' && (
               <AudioPlayer item={item} pkg={pkg} isPlaying={isPlaying} elapsed={elapsed} totalSecs={totalSecs}
                 onPlayPause={() => setIsPlaying(p => !p)}
                 onRewind={() => setElapsed(e => Math.max(0, e - 10))}
                 onForward={() => setElapsed(e => Math.min(totalSecs, e + 10))}
-                onScrub={setElapsed} />
+                onScrub={setElapsed} onComplete={handleComplete} />
             )}
             {item.type === 'image' && (
               <ImagePlayer item={item} pkg={pkg} onShare={() => showToast('Shared!')} />
